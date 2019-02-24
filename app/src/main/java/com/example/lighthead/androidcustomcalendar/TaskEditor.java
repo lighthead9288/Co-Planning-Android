@@ -97,9 +97,9 @@ public class TaskEditor extends AppCompatActivity {
 
             //dateAndTime.set(year, month-1, date, hours, minutes);
 
+            double duration = intent.getIntExtra("Duration", 0);
 
-
-            taskDuration.setText(String.valueOf(intent.getIntExtra("Duration", 0)));
+            taskDuration.setText(String.valueOf(intent.getDoubleExtra("Duration", 0)));
             taskVisibility.setChecked(intent.getBooleanExtra("Visibility", false));
             taskEditable.setChecked(intent.getBooleanExtra("Editable", false));
         }
