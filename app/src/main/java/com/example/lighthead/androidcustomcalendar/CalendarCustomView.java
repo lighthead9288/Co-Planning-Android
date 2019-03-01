@@ -2,6 +2,8 @@ package com.example.lighthead.androidcustomcalendar;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.os.Bundle;
+import android.support.v4.app.FragmentTransaction;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Gravity;
@@ -15,6 +17,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -54,9 +57,10 @@ public class CalendarCustomView extends LinearLayout{
         setNextButtonClickEvent();
        // setGridCellClickEvents();
 
+
         setDaysInWeekItemSelectEvent();
 
-
+        
 
     }
     public CalendarCustomView(Context context, AttributeSet attrs, int defStyleAttr) {
@@ -120,20 +124,6 @@ public class CalendarCustomView extends LinearLayout{
             }
         });
     }
-  /*  private void setGridCellClickEvents(){
-        calendarGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-
-                TextView tvItem = ((TextView)view.findViewById(R.id.calendar_date_id));
-                String strItem = tvItem.getText().toString();
-
-                Toast.makeText(context, "Clicked: " + currentDate.getText() + ", " +  strItem + " " , Toast.LENGTH_LONG).show();
-            }
-
-
-        });
-    }*/
 
 
 
@@ -144,22 +134,6 @@ public class CalendarCustomView extends LinearLayout{
 
         weekDaysMap = WeekDaysMap.createMap();
 
-        /*
-        *  <TextView
-            android:id="@+id/mon"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:textColor="@color/colorWhite"
-            android:text="@string/mon"
-            android:layout_marginTop="4dp"
-            android:textStyle="bold"
-            android:layout_weight="1"/>
-
-
-            .....
-
-        * */
         LinearLayout layout = findViewById(R.id.weekDays);
         fillWeekDaysByFirstWeekDay(layout);
     }
@@ -203,11 +177,7 @@ public class CalendarCustomView extends LinearLayout{
 
     private void setUpCalendarAdapter(){
         List<Date> dayValueInCells = new ArrayList<Date>();
-     //   mQuery = new DatabaseQuery(context);
-    //    List<EventObjects> mEvents = mQuery.getAllFutureEvents();
         Calendar mCal = (Calendar)cal.clone();
-
-       // mCal.setFirstDayOfWeek(Calendar.MONDAY);
 
         mCal.set(Calendar.DAY_OF_MONTH, 1);
         int firstDayOfTheMonth = mCal.get(Calendar.DAY_OF_WEEK) - 1 - firstWeekDayNumber;
@@ -234,12 +204,28 @@ public class CalendarCustomView extends LinearLayout{
 
         String sDate = formatter.format(cal.getTime());
         currentDate.setText(sDate);
-        mAdapter = new GridAdapter(context, dayValueInCells, cal
+
+
+
+        ICalendarCellClick iCalendarCellClick = new ICalendarCellClick() {
+            @Override
+            public void OnClick(Bundle bundle) {
+
+
+
+
+            }
+        };
+
+
+        mAdapter = new GridAdapter(context, dayValueInCells, cal, iCalendarCellClick
              //   , mEvents
         );
         calendarGridView.setAdapter(mAdapter);
     }
 }
+
+
 
 
 

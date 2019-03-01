@@ -4,9 +4,12 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TabHost;
+import android.widget.Toast;
 
 
 /**
@@ -17,7 +20,7 @@ import android.view.ViewGroup;
  * Use the {@link ScheduleFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class ScheduleFragment extends Fragment {
+public class ScheduleFragment extends Fragment implements TaskListFragment.OnFragmentInteractionListener {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -31,6 +34,7 @@ public class ScheduleFragment extends Fragment {
 
     public ScheduleFragment() {
         // Required empty public constructor
+
     }
 
     /**
@@ -58,13 +62,56 @@ public class ScheduleFragment extends Fragment {
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
+
+     //   InitTabs();
     }
+
+
+    public void InitTabs(View view){
+        TabHost tabHost = (TabHost)view.findViewById(android.R.id.tabhost);
+        // инициализация
+        tabHost.setup();
+
+        TabHost.TabSpec tabSpec;
+
+        // создаем вкладку и указываем тег
+        tabSpec = tabHost.newTabSpec("tag1");
+        // название вкладки
+        tabSpec.setIndicator("Calendar");
+        // указываем id компонента из FrameLayout, он и станет содержимым
+        tabSpec.setContent(R.id.calendarFragment);
+        // добавляем в корневой элемент
+        tabHost.addTab(tabSpec);
+
+        tabSpec = tabHost.newTabSpec("tag2");
+        // указываем название и картинку
+        // в нашем случае вместо картинки идет xml-файл,
+        // который определяет картинку по состоянию вкладки
+        tabSpec.setIndicator("Tasks");
+        tabSpec.setContent(R.id.taskListFragment);
+        tabHost.addTab(tabSpec);
+
+
+        // вторая вкладка будет выбрана по умолчанию
+        tabHost.setCurrentTabByTag("tag2");
+
+        // обработчик переключения вкладок
+        tabHost.setOnTabChangedListener(new TabHost.OnTabChangeListener() {
+            public void onTabChanged(String tabId) {
+                Toast.makeText(getContext(), "tabId = " + tabId, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
+        View view = inflater.inflate(R.layout.fragment_schedule, container, false);
+        InitTabs(view);
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_schedule, container, false);
+        return view;
     }
 
     // TODO: Rename method, update argument and hook method into UI event
@@ -89,6 +136,11 @@ public class ScheduleFragment extends Fragment {
     public void onDetach() {
         super.onDetach();
         mListener = null;
+    }
+
+    @Override
+    public void onFragmentInteraction(Uri uri) {
+
     }
 
     /**

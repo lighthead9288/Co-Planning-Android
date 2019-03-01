@@ -1,6 +1,7 @@
 package com.example.lighthead.androidcustomcalendar;
 
 import android.app.ActionBar;
+import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.support.annotation.NonNull;
@@ -21,12 +22,14 @@ import android.widget.Toast;
 import org.xmlpull.v1.XmlPullParser;
 
 public class MainActivity extends AppCompatActivity implements ScheduleFragment.OnFragmentInteractionListener ,
-        SearchFragment.OnFragmentInteractionListener, MappingsFragment.OnFragmentInteractionListener, NotificationsFragment.OnFragmentInteractionListener {
+        SearchFragment.OnFragmentInteractionListener, MappingsFragment.OnFragmentInteractionListener, NotificationsFragment.OnFragmentInteractionListener,
+        CalendarFragment.OnFragmentInteractionListener, TaskListFragment.OnFragmentInteractionListener, TaskEditorFragment.OnFragmentInteractionListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
 
-    Global global = new Global();;
+    Global global = new Global();
 
+    Intent intent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,9 +59,11 @@ public class MainActivity extends AppCompatActivity implements ScheduleFragment.
         BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.bottom_navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
 
-        global.SetCurSchedFragment("calendar");
+        global.SetCurSchedFragment(new CalendarFragment());
 
-        loadFragment(new ScheduleFragment());
+        loadFragment(new CalendarFragment());
+       /* intent = new Intent(getApplicationContext(), ScheduleActivity.class);
+        startActivity(intent);*/
     }
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener =
@@ -68,30 +73,37 @@ public class MainActivity extends AppCompatActivity implements ScheduleFragment.
             Fragment fragment;
             switch (item.getItemId()) {
                 case R.id.mySchedule:
-                    String curSchedFrag = global.GetCurSchedFragment();
-                    if (curSchedFrag.equals("calendar")) {
-                        fragment = new ScheduleFragment();
-                        loadFragment(fragment);
-                    }
+                    Fragment curSchedFrag = global.GetCurSchedFragment();
+                   // if (curSchedFrag.equals("calendar")) {
+                   //     fragment = new CalendarFragment();
+                        loadFragment(curSchedFrag);
+
+
+                   // }
+
 
                     return true;
                 case R.id.search:
+
                     fragment = new SearchFragment();
                    // Bundle bundle = new Bundle();
                   //  bundle.putString("CurSearchFragment", "StartSearch");
                   //  fragment.setArguments(bundle);
                     loadFragment(fragment);
+
                     return true;
 
                 case R.id.mappings:
                     fragment = new MappingsFragment();
                     loadFragment(fragment);
+
                     return true;
 
 
                 case R.id.notifications:
                     fragment = new NotificationsFragment();
                     loadFragment(fragment);
+
                     return true;
 
 

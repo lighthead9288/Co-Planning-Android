@@ -1,17 +1,22 @@
 package com.example.lighthead.androidcustomcalendar;
 
 import android.app.Application;
+import android.support.v4.app.Fragment;
 
 public class Global extends Application {
-    private String curSchedFragment;
+    private static Fragment curSchedFragment;
 
-    public String GetCurSchedFragment(){
+    public Fragment GetCurSchedFragment(){
+
         return curSchedFragment;
     }
-
-    public void SetCurSchedFragment(String fragment)
+    public void SetCurSchedFragment(Fragment fragment)
     {
         curSchedFragment = fragment;
+    }
+
+    public Global(){
+
     }
 
 }
