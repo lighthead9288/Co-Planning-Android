@@ -19,6 +19,7 @@ import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -298,7 +299,7 @@ public class TaskListFragment extends Fragment {
             TaskComparable taskComparable = new TaskComparable(task);
             taskComparables.add(taskComparable);
         }
-        Collections.sort(taskComparables, TaskComparable.DateTimeComparator);
+        Collections.sort(taskComparables, TaskComparable.DateTimeFromComparator);
 
         // UpdateIdsMap(tasks);
 
@@ -546,7 +547,7 @@ public class TaskListFragment extends Fragment {
             ArrayList<TaskComparable> selected = taskAdapter.selectedTasks;
             for (TaskDBWrapper task:selected
             ) {
-                task.SetDate(year, monthOfYear+1, dayOfMonth);
+                task.SetDateFrom(year, monthOfYear+1, dayOfMonth);
                 TaskManager tm = new TaskManager(getContext());
                 tm.AddTask(task);
             }
@@ -574,7 +575,7 @@ public class TaskListFragment extends Fragment {
             ArrayList<TaskComparable> selected = taskAdapter.selectedTasks;
             for (TaskDBWrapper task:selected
             ) {
-                task.SetDate(year, monthOfYear+1, dayOfMonth);
+                task.SetDateFrom(year, monthOfYear+1, dayOfMonth);
                 TaskManager tm = new TaskManager(getContext());
                 tm.UpdateTask(task, task.GetId());
             }
@@ -622,11 +623,14 @@ public class TaskListFragment extends Fragment {
         bundle.putLong("Id", task.GetId());
         bundle.putString("Name", task.GetName());
         bundle.putString("Comment", task.GetComment());
-        bundle.putString("Date", task.GetDate());
-        bundle.putString("Time", task.GetTime());
-        bundle.putDouble("Duration", task.GetDuration());
+        bundle.putString("DateFrom", task.GetDateFrom());
+        bundle.putString("TimeFrom", task.GetTimeFrom());
+        bundle.putString("DateTo", task.GetDateTo());
+        bundle.putString("TimeTo", task.GetTimeTo());
+     //   bundle.putDouble("Duration", task.GetDuration());
         bundle.putBoolean("Visibility", task.GetVisibility());
         bundle.putBoolean("Editable", task.GetEditable());
+        bundle.putBoolean("Completed", task.GetCompleted());
 
         TaskEditorFragment taskEditorFragment = new TaskEditorFragment();
         taskEditorFragment.setArguments(bundle);

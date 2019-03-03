@@ -36,9 +36,10 @@ public class TaskAdapter extends ArrayAdapter<TaskComparable> {
         View view = inflater.inflate(layout, parent, false);
         TextView tNameView = view.findViewById(R.id.taskName);
         TextView tCommentView = view.findViewById(R.id.taskComment);
-        TextView tDateView = view.findViewById(R.id.taskDate);
-        TextView tTimeView = view.findViewById(R.id.taskTime);
-        TextView tDurationView = view.findViewById(R.id.taskDuration);
+     //   TextView tDateFromView = view.findViewById(R.id.taskDateFrom);
+     //   TextView tTimeFromView = view.findViewById(R.id.taskTimeFrom);
+       // TextView tDurationView = view.findViewById(R.id.taskDuration);
+        TextView tDateTimeInterval = view.findViewById(R.id.taskDateTimeInterval);
         TextView tDayOfWeekView = view.findViewById(R.id.taskDayOfWeek);
       //  TextView tVisibilityView = view.findViewById(R.id.taskVisibility);
       //  TextView tEditableView = view.findViewById(R.id.taskEditable);
@@ -61,15 +62,27 @@ public class TaskAdapter extends ArrayAdapter<TaskComparable> {
 
         TaskDBWrapper task = Tasks.get(position);
 
-        Calendar curTaskDateTime = ((TaskComparable) task).GetDateTime();
-        int dayOfWeek = curTaskDateTime.get(Calendar.DAY_OF_WEEK);
+        Calendar curTaskDateTimeFrom = ((TaskComparable) task).GetDateTimeFrom();
+        int dayOfWeek = curTaskDateTimeFrom.get(Calendar.DAY_OF_WEEK);
+
+        String taskDateTimeInterval;
+        String taskDateFrom = task.GetDateFrom();
+        taskDateFrom = (taskDateFrom==null)?"??":taskDateFrom;
+        String taskTimeFrom = task.GetTimeFrom();
+        taskTimeFrom = (taskTimeFrom==null)?"??":taskTimeFrom;
+        String taskDateTo = task.GetDateTo();
+        taskDateTo = (taskDateTo==null)?"??":taskDateTo;
+        String taskTimeTo = task.GetTimeTo();
+        taskTimeTo = (taskTimeTo==null)?"??":taskTimeTo;
+        taskDateTimeInterval = taskDateFrom + ", " + taskTimeFrom + " - " + taskDateTo + ", " + taskTimeTo;
 
 
         tNameView.setText(task.GetName());
         tCommentView.setText(task.GetComment());
-        tDateView.setText(task.GetDate());
-        tTimeView.setText(task.GetTime());
-        tDurationView.setText(String.valueOf(task.GetDuration()+"(min.)"));
+        tDateTimeInterval.setText(taskDateTimeInterval);
+     //   tDateFromView.setText(task.GetDateFrom());
+    //    tTimeFromView.setText(task.GetTimeFrom());
+       // tDurationView.setText(String.valueOf(task.GetDuration()+"(min.)"));
         tDayOfWeekView.setText(GetStrWeekDay(dayOfWeek));
       //  tVisibilityView.setText(task.GetVisibility()?"Yes":"No");
       //  tEditableView.setText(task.GetEditable()?"Yes":"No");

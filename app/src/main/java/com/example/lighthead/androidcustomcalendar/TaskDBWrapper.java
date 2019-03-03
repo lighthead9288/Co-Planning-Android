@@ -13,13 +13,21 @@ public class TaskDBWrapper extends Task {
         super(task.GetName());
         SetComment(task.GetComment());
 
-        String strDate = task.GetDate();
-        if (strDate!=null)
-            SetDate(ConvertDateAndTime.GetYearFromStringDate(strDate), ConvertDateAndTime.GetMonthFromStringDate(strDate), ConvertDateAndTime.GetDayFromStringDate(strDate));
+        String strDateFrom = task.GetDateFrom();
+        if (strDateFrom!=null)
+            SetDateFrom(ConvertDateAndTime.GetYearFromStringDate(strDateFrom), ConvertDateAndTime.GetMonthFromStringDate(strDateFrom), ConvertDateAndTime.GetDayFromStringDate(strDateFrom));
 
-        String strTime = task.GetTime();
-        if (strTime!=null)
-            SetTime(ConvertDateAndTime.GetHourFromStringTime(strTime), ConvertDateAndTime.GetMinutesFromStringTime(strTime));
+        String strTimeFrom = task.GetTimeFrom();
+        if (strTimeFrom!=null)
+            SetTimeFrom(ConvertDateAndTime.GetHourFromStringTime(strTimeFrom), ConvertDateAndTime.GetMinutesFromStringTime(strTimeFrom));
+
+        String strDateTo = task.GetDateTo();
+        if (strDateTo!=null)
+            SetDateTo(ConvertDateAndTime.GetYearFromStringDate(strDateTo), ConvertDateAndTime.GetMonthFromStringDate(strDateTo), ConvertDateAndTime.GetDayFromStringDate(strDateTo));
+
+        String strTimeTo = task.GetTimeTo();
+        if (strTimeTo!=null)
+            SetTimeTo(ConvertDateAndTime.GetHourFromStringTime(strTimeTo), ConvertDateAndTime.GetMinutesFromStringTime(strTimeTo));
 
         SetDuration(task.GetDuration());
 

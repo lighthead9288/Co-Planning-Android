@@ -59,9 +59,10 @@ public class MainActivity extends AppCompatActivity implements ScheduleFragment.
         BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.bottom_navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
 
-        global.SetCurSchedFragment(new CalendarFragment());
 
-        loadFragment(new CalendarFragment());
+        Fragment fragment = new CalendarFragment();
+        global.SetCurSchedFragment(fragment);
+        loadFragment(fragment);
        /* intent = new Intent(getApplicationContext(), ScheduleActivity.class);
         startActivity(intent);*/
     }

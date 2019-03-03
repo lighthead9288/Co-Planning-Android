@@ -23,9 +23,13 @@ public class Task /*<TNotifyMethod>*/
 
     private String Comment;
 
-    private String Date;
+    private String DateFrom;
 
-    private String Time;
+    private String TimeFrom;
+
+    private String DateTo;
+
+    private String TimeTo;
 
     private double Duration;
 
@@ -47,15 +51,19 @@ public class Task /*<TNotifyMethod>*/
         return Comment;
     }
 
-    public String GetDate()
+    public String GetDateFrom()
     {
-        return Date;
+        return DateFrom;
     }
 
-    public String GetTime()
+    public String GetTimeFrom()
     {
-        return Time;
+        return TimeFrom;
     }
+
+    public String GetDateTo() {return DateTo;}
+
+    public String GetTimeTo() {return TimeTo;}
 
     public double GetDuration()
     {
@@ -85,14 +93,24 @@ public class Task /*<TNotifyMethod>*/
         Comment = comment;
     }
 
-    public void SetDate(int year, int month, int date)
+    public void SetDateFrom(int year, int month, int date)
     {
-        Date = ConvertDateAndTime.ConvertToStringDate(year, month, date);
+        DateFrom = ConvertDateAndTime.ConvertToStringDate(year, month, date);
     }
 
-    public void SetTime(int hours, int minutes)
+    public void SetTimeFrom(int hours, int minutes)
     {
-        Time = ConvertDateAndTime.ConvertToStringTime(hours, minutes);
+        TimeFrom = ConvertDateAndTime.ConvertToStringTime(hours, minutes);
+    }
+
+    public void SetDateTo(int year, int month, int date)
+    {
+        DateTo = ConvertDateAndTime.ConvertToStringDate(year, month, date);
+    }
+
+    public void SetTimeTo(int hours, int minutes)
+    {
+        TimeTo = ConvertDateAndTime.ConvertToStringTime(hours, minutes);
     }
 
     public void SetDuration(double duration)

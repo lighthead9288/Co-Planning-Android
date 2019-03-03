@@ -6,7 +6,8 @@ import java.util.GregorianCalendar;
 
 public class TaskComparable extends TaskDBWrapper {
 
-    private Calendar DateTime = Calendar.getInstance();
+    private Calendar DateTimeFrom = Calendar.getInstance();
+    private Calendar DateTimeTo = Calendar.getInstance();
 
     public TaskComparable(TaskDBWrapper task) {
         super(task);
@@ -14,47 +15,89 @@ public class TaskComparable extends TaskDBWrapper {
         this.SetId(task.GetId());
 
 
-        String taskStrDate = task.GetDate();
-        String taskStrTime = task.GetTime();
+        String taskStrDateFrom = task.GetDateFrom();
+        String taskStrTimeFrom = task.GetTimeFrom();
 
-        if (!(taskStrDate==null)) {
+        if (!(taskStrDateFrom==null)) {
 
-            int taskIntYear = ConvertDateAndTime.GetYearFromStringDate(taskStrDate);
-            int taskIntMonth = ConvertDateAndTime.GetMonthFromStringDate(taskStrDate);
-            int taskIntDate = ConvertDateAndTime.GetDayFromStringDate(taskStrDate);
+            int taskIntYear = ConvertDateAndTime.GetYearFromStringDate(taskStrDateFrom);
+            int taskIntMonth = ConvertDateAndTime.GetMonthFromStringDate(taskStrDateFrom);
+            int taskIntDate = ConvertDateAndTime.GetDayFromStringDate(taskStrDateFrom);
 
 
             int taskIntHours = 0;
             int taskIntMinutes = 0;
 
-            if (!(taskStrTime==null)) {
-                taskIntHours = ConvertDateAndTime.GetHourFromStringTime(taskStrTime);
-                taskIntMinutes = ConvertDateAndTime.GetMinutesFromStringTime(taskStrTime);
+            if (!(taskStrTimeFrom==null)) {
+                taskIntHours = ConvertDateAndTime.GetHourFromStringTime(taskStrTimeFrom);
+                taskIntMinutes = ConvertDateAndTime.GetMinutesFromStringTime(taskStrTimeFrom);
             }
 
 
-            SetDateTime(taskIntYear, taskIntMonth - 1, taskIntDate, taskIntHours, taskIntMinutes);
+            SetDateTimeFrom(taskIntYear, taskIntMonth - 1, taskIntDate, taskIntHours, taskIntMinutes);
+        }
+
+
+        String taskStrDateTo = task.GetDateTo();
+        String taskStrTimeTo = task.GetTimeTo();
+
+        if (!(taskStrDateTo==null)) {
+
+            int taskIntYear = ConvertDateAndTime.GetYearFromStringDate(taskStrDateTo);
+            int taskIntMonth = ConvertDateAndTime.GetMonthFromStringDate(taskStrDateTo);
+            int taskIntDate = ConvertDateAndTime.GetDayFromStringDate(taskStrDateTo);
+
+
+            int taskIntHours = 0;
+            int taskIntMinutes = 0;
+
+            if (!(taskStrTimeTo==null)) {
+                taskIntHours = ConvertDateAndTime.GetHourFromStringTime(taskStrTimeTo);
+                taskIntMinutes = ConvertDateAndTime.GetMinutesFromStringTime(taskStrTimeTo);
+            }
+
+
+            SetDateTimeTo(taskIntYear, taskIntMonth - 1, taskIntDate, taskIntHours, taskIntMinutes);
         }
 
     }
 
-    public void SetDateTime(int year, int month, int date, int hours, int minutes) {
+    public void SetDateTimeFrom(int year, int month, int date, int hours, int minutes) {
 
-        DateTime.set(year, month-1, date, hours, minutes);
+        DateTimeFrom.set(year, month-1, date, hours, minutes);
     }
 
-    public Calendar GetDateTime(){
-        return DateTime;
+    public Calendar GetDateTimeFrom(){
+        return DateTimeFrom;
+    }
+
+
+    public void SetDateTimeTo(int year, int month, int date, int hours, int minutes) {
+
+        DateTimeTo.set(year, month-1, date, hours, minutes);
+    }
+
+    public Calendar GetDateTimeTo(){
+        return DateTimeTo;
     }
 
 
 
 
-    public static Comparator<TaskComparable> DateTimeComparator = new Comparator<TaskComparable>() {
+    public static Comparator<TaskComparable> DateTimeFromComparator = new Comparator<TaskComparable>() {
         @Override
         public int compare(TaskComparable o1, TaskComparable o2) {
-            Calendar calendarTask1 = o1.GetDateTime();
-            Calendar calendarTask2 = o2.GetDateTime();
+            Calendar calendarTask1 = o1.GetDateTimeFrom();
+            Calendar calendarTask2 = o2.GetDateTimeFrom();
+            return calendarTask1.compareTo(calendarTask2);
+        }
+    };
+
+    public static Comparator<TaskComparable> DateTimeToComparator = new Comparator<TaskComparable>() {
+        @Override
+        public int compare(TaskComparable o1, TaskComparable o2) {
+            Calendar calendarTask1 = o1.GetDateTimeTo();
+            Calendar calendarTask2 = o2.GetDateTimeTo();
             return calendarTask1.compareTo(calendarTask2);
         }
     };

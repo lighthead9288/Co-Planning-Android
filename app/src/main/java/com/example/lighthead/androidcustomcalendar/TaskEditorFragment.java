@@ -35,21 +35,27 @@ public class TaskEditorFragment extends Fragment {
 
     EditText taskName;
     EditText taskComment;
-    TextView taskDate;
-    TextView taskTime;
+    TextView taskDateFrom;
+    TextView taskTimeFrom;
+    TextView taskDateTo;
+    TextView taskTimeTo;
     EditText taskDuration;
     CheckBox taskVisibility;
     CheckBox taskEditable;
 
-    CheckBox dateConfirm;
-    CheckBox timeConfirm;
+    CheckBox dateFromConfirm;
+    CheckBox timeFromConfirm;
+    CheckBox dateToConfirm;
+    CheckBox timeToConfirm;
 
     Button saveButton;
 
     boolean isNewTask=true;
     private long TaskId;
+    boolean EditedTaskCompleted = false;
 
-    Calendar dateAndTime=Calendar.getInstance();
+    Calendar dateAndTimeFrom=Calendar.getInstance();
+    Calendar dateAndTimeTo = Calendar.getInstance();
 
     Bundle taskEditorParamsBundle;
 
@@ -107,39 +113,72 @@ public class TaskEditorFragment extends Fragment {
         taskName = view.findViewById(R.id.taskName);
         taskComment = view.findViewById(R.id.taskComment);
 
-        taskDate = view.findViewById(R.id.taskDate);
-        taskDate.setOnClickListener(new View.OnClickListener() {
+        taskDateFrom = view.findViewById(R.id.taskDateFrom);
+        taskDateFrom.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                setDate(v);
+                setDateFrom(v);
             }
         });
 
-        taskTime = view.findViewById(R.id.taskTime);
-        taskTime.setOnClickListener(new View.OnClickListener() {
+        taskTimeFrom = view.findViewById(R.id.taskTimeFrom);
+        taskTimeFrom.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                setTime(v);
+                setTimeFrom(v);
             }
         });
 
-        taskDuration = view.findViewById(R.id.taskDuration);
+
+        taskDateTo = view.findViewById(R.id.taskDateTo);
+        taskDateTo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setDateTo(v);
+            }
+        });
+
+        taskTimeTo = view.findViewById(R.id.taskTimeTo);
+        taskTimeTo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setTimeTo(v);
+            }
+        });
+
+        //taskDuration = view.findViewById(R.id.taskDuration);
         taskVisibility = view.findViewById(R.id.taskVisibility);
         taskEditable = view.findViewById(R.id.taskEditable);
 
-        dateConfirm = view.findViewById(R.id.dateConfirm);
-        dateConfirm.setOnClickListener(new View.OnClickListener() {
+        dateFromConfirm = view.findViewById(R.id.dateFromConfirm);
+        dateFromConfirm.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                TaskDateConfirmSet(v);
+                TaskDateFromConfirmSet(v);
             }
         });
 
-        timeConfirm = view.findViewById(R.id.timeConfirm);
-        timeConfirm.setOnClickListener(new View.OnClickListener() {
+        timeFromConfirm = view.findViewById(R.id.timeFromConfirm);
+        timeFromConfirm.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                TaskTimeConfirmSet(v);
+                TaskTimeFromConfirmSet(v);
+            }
+        });
+
+        dateToConfirm = view.findViewById(R.id.dateToConfirm);
+        dateToConfirm.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                TaskDateToConfirmSet(v);
+            }
+        });
+
+        timeToConfirm = view.findViewById(R.id.timeToConfirm);
+        timeToConfirm.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                TaskTimeToConfirmSet(v);
             }
         });
 
@@ -152,125 +191,164 @@ public class TaskEditorFragment extends Fragment {
             }
         });
 
-       // Intent intent = getIntent();
         taskEditorParamsBundle = getArguments();
 
-        //isNewTask = intent.getBooleanExtra("isNewTask", true);
         isNewTask = taskEditorParamsBundle.getBoolean("isNewTask");
 
-    //    if (!isNewTask) {
-            //TaskId = intent.getLongExtra("Id", 0);
-        if (!isNewTask) TaskId = taskEditorParamsBundle.getLong("Id");
+        if (!isNewTask) {
+            TaskId = taskEditorParamsBundle.getLong("Id");
+            EditedTaskCompleted = taskEditorParamsBundle.getBoolean("Completed");
+        }
 
-            taskName.setText(/*intent.getStringExtra("Name")*/taskEditorParamsBundle.getString("Name"));
-            taskComment.setText(/*intent.getStringExtra("Comment")*/taskEditorParamsBundle.getString("Comment"));
+        taskName.setText(taskEditorParamsBundle.getString("Name"));
+        taskComment.setText(taskEditorParamsBundle.getString("Comment"));
 
-            int year, month, date, hours, minutes;
-
-
-            //String strDate = intent.getStringExtra("Date");
-            String strDate = taskEditorParamsBundle.getString("Date");
-            if (!(strDate==null)) {
-                year = ConvertDateAndTime.GetYearFromStringDate(strDate);
-                dateAndTime.set(Calendar.YEAR, year);
-                month = ConvertDateAndTime.GetMonthFromStringDate(strDate);
-                dateAndTime.set(Calendar.MONTH, month-1);
-                date = ConvertDateAndTime.GetDayFromStringDate(strDate);
-                dateAndTime.set(Calendar.DAY_OF_MONTH, date);
-                taskDate.setText(strDate);
-            }
-            else {
-                dateConfirm.setChecked(true);
-                DisableDateSet();
-                taskDate.setText("Press to set");
-            }
+        int year, month, date, hours, minutes;
 
 
-
-           // String strTime = intent.getStringExtra("Time");
-            String strTime = taskEditorParamsBundle.getString("Time");
-            if (!(strTime==null)) {
-                hours = ConvertDateAndTime.GetHourFromStringTime(strTime);
-                dateAndTime.set(Calendar.HOUR_OF_DAY, hours);
-                minutes = ConvertDateAndTime.GetMinutesFromStringTime(strTime);
-                dateAndTime.set(Calendar.MINUTE, minutes);
-                taskTime.setText(strTime);
-            }
-            else {
-                timeConfirm.setChecked(true);
-                DisableTimeSet();
-                taskTime.setText("Press to set");
-            }
-
-            //dateAndTime.set(year, month-1, date, hours, minutes);
-
-            //double duration = intent.getIntExtra("Duration", 0);
-            //double duration = bundle.getDouble("Duration");
-
-            taskDuration.setText(String.valueOf(/*intent.getDoubleExtra("Duration", 0))*/taskEditorParamsBundle.getDouble("Duration")));
-            taskVisibility.setChecked(/*intent.getBooleanExtra("Visibility", false)*/taskEditorParamsBundle.getBoolean("Visibility"));
-            taskEditable.setChecked(/*intent.getBooleanExtra("Editable", false)*/taskEditorParamsBundle.getBoolean("Editable"));
-       // }
-
-      /*  else {
-            dateAndTime = new GregorianCalendar();
-            int year = dateAndTime.get(Calendar.YEAR);
-            int month = dateAndTime.get(Calendar.MONTH)+1;
-            int date = dateAndTime.get(Calendar.DAY_OF_MONTH);
-            int hours = dateAndTime.get(Calendar.HOUR_OF_DAY);
-            int minutes = dateAndTime.get(Calendar.MINUTE);
-            // int seconds = dateAndTime.get(Calendar.SECOND);
-
-            String strDate = ConvertDateAndTime.ConvertToStringDate(year, month, date);
-            String strTime = ConvertDateAndTime.ConvertToStringTime(hours, minutes);
-
-            taskDate.setText("Press to set");
-            taskTime.setText("Press to set");
+        String strDateFrom = taskEditorParamsBundle.getString("DateFrom");
+        if (!(strDateFrom==null)) {
+            year = ConvertDateAndTime.GetYearFromStringDate(strDateFrom);
+            dateAndTimeFrom.set(Calendar.YEAR, year);
+            month = ConvertDateAndTime.GetMonthFromStringDate(strDateFrom);
+            dateAndTimeFrom.set(Calendar.MONTH, month-1);
+            date = ConvertDateAndTime.GetDayFromStringDate(strDateFrom);
+            dateAndTimeFrom.set(Calendar.DAY_OF_MONTH, date);
+            taskDateFrom.setText(strDateFrom);
+        }
+        else {
+            dateFromConfirm.setChecked(true);
+            DisableDateFromSet();
+            taskDateFrom.setText("Press to set");
+        }
 
 
-        }*/
+
+        String strTimeFrom = taskEditorParamsBundle.getString("TimeFrom");
+        if (!(strTimeFrom==null)) {
+            hours = ConvertDateAndTime.GetHourFromStringTime(strTimeFrom);
+            dateAndTimeFrom.set(Calendar.HOUR_OF_DAY, hours);
+            minutes = ConvertDateAndTime.GetMinutesFromStringTime(strTimeFrom);
+            dateAndTimeFrom.set(Calendar.MINUTE, minutes);
+            taskTimeFrom.setText(strTimeFrom);
+        }
+        else {
+            timeFromConfirm.setChecked(true);
+            DisableTimeFromSet();
+            taskTimeFrom.setText("Press to set");
+        }
+
+
+        String strDateTo = taskEditorParamsBundle.getString("DateTo");
+        if (!(strDateTo==null)) {
+            year = ConvertDateAndTime.GetYearFromStringDate(strDateTo);
+            dateAndTimeTo.set(Calendar.YEAR, year);
+            month = ConvertDateAndTime.GetMonthFromStringDate(strDateTo);
+            dateAndTimeTo.set(Calendar.MONTH, month-1);
+            date = ConvertDateAndTime.GetDayFromStringDate(strDateTo);
+            dateAndTimeTo.set(Calendar.DAY_OF_MONTH, date);
+            taskDateTo.setText(strDateTo);
+        }
+        else {
+            dateToConfirm.setChecked(true);
+            DisableDateToSet();
+            taskDateTo.setText("Press to set");
+        }
+
+
+
+        String strTimeTo = taskEditorParamsBundle.getString("TimeTo");
+        if (!(strTimeTo==null)) {
+            hours = ConvertDateAndTime.GetHourFromStringTime(strTimeTo);
+            dateAndTimeTo.set(Calendar.HOUR_OF_DAY, hours);
+            minutes = ConvertDateAndTime.GetMinutesFromStringTime(strTimeTo);
+            dateAndTimeTo.set(Calendar.MINUTE, minutes);
+            taskTimeTo.setText(strTimeTo);
+        }
+        else {
+            timeToConfirm.setChecked(true);
+            DisableTimeToSet();
+            taskTimeTo.setText("Press to set");
+        }
+
+
+      //  taskDuration.setText(String.valueOf(taskEditorParamsBundle.getDouble("Duration")));
+        taskVisibility.setChecked(taskEditorParamsBundle.getBoolean("Visibility"));
+        taskEditable.setChecked(taskEditorParamsBundle.getBoolean("Editable"));
 
 
         // Inflate the layout for this fragment
         return view;
     }
 
-    public void TaskDateConfirmSet(View view) {
-        if (dateConfirm.isChecked())
-            DisableDateSet();
-        else EnableDateSet();
+    public void TaskDateFromConfirmSet(View view) {
+        if (dateFromConfirm.isChecked())
+            DisableDateFromSet();
+        else EnableDateFromSet();
 
     }
 
-    public void TaskTimeConfirmSet(View view) {
-        if (timeConfirm.isChecked())
-            DisableTimeSet();
-        else EnableTimeSet();
+    public void TaskTimeFromConfirmSet(View view) {
+        if (timeFromConfirm.isChecked())
+            DisableTimeFromSet();
+        else EnableTimeFromSet();
 
     }
 
-    private void DisableDateSet() {
+    public void TaskDateToConfirmSet(View view) {
+        if (dateToConfirm.isChecked())
+            DisableDateToSet();
+        else EnableDateToSet();
 
-        taskDate.setEnabled(false);
     }
 
-    private void DisableTimeSet() {
-        timeConfirm.setChecked(true);
-        taskTime.setEnabled(false);
+    public void TaskTimeToConfirmSet(View view) {
+        if (timeToConfirm.isChecked())
+            DisableTimeToSet();
+        else EnableTimeToSet();
+
+    }
+
+    private void DisableDateFromSet() {
+
+        taskDateFrom.setEnabled(false);
+    }
+
+    private void DisableTimeFromSet() {
+        timeFromConfirm.setChecked(true);
+        taskTimeFrom.setEnabled(false);
+    }
+
+    private void DisableDateToSet() {
+
+        taskDateTo.setEnabled(false);
+    }
+
+    private void DisableTimeToSet() {
+        timeToConfirm.setChecked(true);
+        taskTimeTo.setEnabled(false);
     }
 
 
-    private void EnableDateSet() {
-        taskDate.setEnabled(true);
+    private void EnableDateFromSet() {
+        taskDateFrom.setEnabled(true);
     }
 
-    private void EnableTimeSet() {
-        taskTime.setEnabled(true);
+    private void EnableTimeFromSet() {
+        taskTimeFrom.setEnabled(true);
+    }
+
+    private void EnableDateToSet() {
+        taskDateTo.setEnabled(true);
+    }
+
+    private void EnableTimeToSet() {
+        taskTimeTo.setEnabled(true);
     }
 
 
 
-    private void SetDate(Calendar fullDate) {
+    private void SetDateFrom(Calendar fullDate) {
 
         int date = fullDate.get(Calendar.DAY_OF_MONTH);
         int month = fullDate.get(Calendar.MONTH);
@@ -278,57 +356,118 @@ public class TaskEditorFragment extends Fragment {
 
         int dispMonth = month+1;
 
-        taskDate.setText(ConvertDateAndTime.ConvertToStringDate(year, dispMonth, date));
+        taskDateFrom.setText(ConvertDateAndTime.ConvertToStringDate(year, dispMonth, date));
 
-        dateAndTime.set(year, month, date);
+        dateAndTimeFrom.set(year, month, date);
 
     }
 
-    private void SetTime(Calendar fullDate) {
+    private void SetTimeFrom(Calendar fullDate) {
 
         int hours = fullDate.get(Calendar.HOUR_OF_DAY);
         int minutes = fullDate.get(Calendar.MINUTE);
 
-        taskTime.setText(ConvertDateAndTime.ConvertToStringTime(hours, minutes));
+        taskTimeFrom.setText(ConvertDateAndTime.ConvertToStringTime(hours, minutes));
 
-        dateAndTime.set(Calendar.HOUR_OF_DAY, hours);
-        dateAndTime.set(Calendar.MINUTE, minutes);
+        dateAndTimeFrom.set(Calendar.HOUR_OF_DAY, hours);
+        dateAndTimeFrom.set(Calendar.MINUTE, minutes);
+    }
+
+    private void SetDateTo(Calendar fullDate) {
+
+        int date = fullDate.get(Calendar.DAY_OF_MONTH);
+        int month = fullDate.get(Calendar.MONTH);
+        int year = fullDate.get(Calendar.YEAR);
+
+        int dispMonth = month+1;
+
+        taskDateTo.setText(ConvertDateAndTime.ConvertToStringDate(year, dispMonth, date));
+
+        dateAndTimeTo.set(year, month, date);
+
+    }
+
+    private void SetTimeTo(Calendar fullDate) {
+
+        int hours = fullDate.get(Calendar.HOUR_OF_DAY);
+        int minutes = fullDate.get(Calendar.MINUTE);
+
+        taskTimeTo.setText(ConvertDateAndTime.ConvertToStringTime(hours, minutes));
+
+        dateAndTimeTo.set(Calendar.HOUR_OF_DAY, hours);
+        dateAndTimeTo.set(Calendar.MINUTE, minutes);
     }
 
 
-    public void setDate(View view){
-        new DatePickerDialog(getContext(), curTaskDate,
-                dateAndTime.get(Calendar.YEAR),
-                dateAndTime.get(Calendar.MONTH),
-                dateAndTime.get(Calendar.DAY_OF_MONTH))
+    public void setDateFrom(View view){
+        new DatePickerDialog(getContext(), curTaskDateFrom,
+                dateAndTimeFrom.get(Calendar.YEAR),
+                dateAndTimeFrom.get(Calendar.MONTH),
+                dateAndTimeFrom.get(Calendar.DAY_OF_MONTH))
                 .show();
     }
 
     // установка обработчика выбора даты
-    DatePickerDialog.OnDateSetListener curTaskDate=new DatePickerDialog.OnDateSetListener() {
+    DatePickerDialog.OnDateSetListener curTaskDateFrom=new DatePickerDialog.OnDateSetListener() {
         public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
-            dateAndTime.set(Calendar.YEAR, year);
-            dateAndTime.set(Calendar.MONTH, monthOfYear);
-            dateAndTime.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+            dateAndTimeFrom.set(Calendar.YEAR, year);
+            dateAndTimeFrom.set(Calendar.MONTH, monthOfYear);
+            dateAndTimeFrom.set(Calendar.DAY_OF_MONTH, dayOfMonth);
 
-            SetDate(dateAndTime);
+            SetDateFrom(dateAndTimeFrom);
 
 
 
         }
     };
 
-    public void setTime(View view) {
-        new TimePickerDialog(getContext(), curTaskTime, dateAndTime.get(Calendar.HOUR_OF_DAY), dateAndTime.get(Calendar.MINUTE), true).show();
+    public void setDateTo(View view){
+        new DatePickerDialog(getContext(), curTaskDateTo,
+                dateAndTimeTo.get(Calendar.YEAR),
+                dateAndTimeTo.get(Calendar.MONTH),
+                dateAndTimeTo.get(Calendar.DAY_OF_MONTH))
+                .show();
     }
 
-    TimePickerDialog.OnTimeSetListener curTaskTime = new TimePickerDialog.OnTimeSetListener() {
+    // установка обработчика выбора даты
+    DatePickerDialog.OnDateSetListener curTaskDateTo=new DatePickerDialog.OnDateSetListener() {
+        public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
+            dateAndTimeTo.set(Calendar.YEAR, year);
+            dateAndTimeTo.set(Calendar.MONTH, monthOfYear);
+            dateAndTimeTo.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+
+            SetDateTo(dateAndTimeTo);
+
+
+
+        }
+    };
+
+    public void setTimeFrom(View view) {
+        new TimePickerDialog(getContext(), curTaskTimeFrom, dateAndTimeFrom.get(Calendar.HOUR_OF_DAY), dateAndTimeFrom.get(Calendar.MINUTE), true).show();
+    }
+
+    TimePickerDialog.OnTimeSetListener curTaskTimeFrom = new TimePickerDialog.OnTimeSetListener() {
         @Override
         public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
-            dateAndTime.set(Calendar.HOUR_OF_DAY, hourOfDay);
-            dateAndTime.set(Calendar.MINUTE, minute);
+            dateAndTimeFrom.set(Calendar.HOUR_OF_DAY, hourOfDay);
+            dateAndTimeFrom.set(Calendar.MINUTE, minute);
 
-            SetTime(dateAndTime);
+            SetTimeFrom(dateAndTimeFrom);
+        }
+    };
+
+    public void setTimeTo(View view) {
+        new TimePickerDialog(getContext(), curTaskTimeTo, dateAndTimeTo.get(Calendar.HOUR_OF_DAY), dateAndTimeTo.get(Calendar.MINUTE), true).show();
+    }
+
+    TimePickerDialog.OnTimeSetListener curTaskTimeTo = new TimePickerDialog.OnTimeSetListener() {
+        @Override
+        public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
+            dateAndTimeTo.set(Calendar.HOUR_OF_DAY, hourOfDay);
+            dateAndTimeTo.set(Calendar.MINUTE, minute);
+
+            SetTimeTo(dateAndTimeTo);
         }
     };
 
@@ -339,18 +478,12 @@ public class TaskEditorFragment extends Fragment {
 
         if (isNewTask) {
             tm.AddTask(task);
-
-           /* Intent intent = new Intent();
-            intent.putExtra("name", taskName.getText().toString());
-            setResult(RESULT_OK, intent);*/
-            //finish();
             getFragmentManager().popBackStack();
 
 
         }
         else {
             tm.UpdateTask(task, TaskId);
-            //finish();
             getFragmentManager().popBackStack();
         }
 
@@ -370,26 +503,42 @@ public class TaskEditorFragment extends Fragment {
 
         task.SetVisibility(visibility);
         task.SetEditable(editable);
+        task.SetCompleted(EditedTaskCompleted);
 
-        String strDuration = taskDuration.getText().toString();
+       /* String strDuration = taskDuration.getText().toString();
         if (!strDuration.isEmpty()&&strDuration!=null) {
             double duration = Double.parseDouble(strDuration);
             task.SetDuration(duration);
+        }*/
+
+        if (!dateFromConfirm.isChecked()&&taskDateFrom.getText()!="Press to set") {
+            String strDateFrom = taskDateFrom.getText().toString();
+            int year = ConvertDateAndTime.GetYearFromStringDate(strDateFrom);
+            int month = ConvertDateAndTime.GetMonthFromStringDate(strDateFrom);
+            int date = ConvertDateAndTime.GetDayFromStringDate(strDateFrom);
+            task.SetDateFrom(year, month, date);
         }
 
-        if (!dateConfirm.isChecked()&&taskDate.getText()!="Press to set") {
-            String strDate = taskDate.getText().toString();
-            int year = ConvertDateAndTime.GetYearFromStringDate(strDate);
-            int month = ConvertDateAndTime.GetMonthFromStringDate(strDate);
-            int date = ConvertDateAndTime.GetDayFromStringDate(strDate);
-            task.SetDate(year, month, date);
+        if (!timeFromConfirm.isChecked()&&taskTimeFrom.getText()!="Press to set") {
+            String strTimeFrom = taskTimeFrom.getText().toString();
+            int hour = ConvertDateAndTime.GetHourFromStringTime(strTimeFrom);
+            int minutes = ConvertDateAndTime.GetMinutesFromStringTime(strTimeFrom);
+            task.SetTimeFrom(hour, minutes);
         }
 
-        if (!timeConfirm.isChecked()&&taskTime.getText()!="Press to set") {
-            String strTime = taskTime.getText().toString();
-            int hour = ConvertDateAndTime.GetHourFromStringTime(strTime);
-            int minutes = ConvertDateAndTime.GetMinutesFromStringTime(strTime);
-            task.SetTime(hour, minutes);
+        if (!dateToConfirm.isChecked()&&taskDateTo.getText()!="Press to set") {
+            String strDateTo = taskDateTo.getText().toString();
+            int year = ConvertDateAndTime.GetYearFromStringDate(strDateTo);
+            int month = ConvertDateAndTime.GetMonthFromStringDate(strDateTo);
+            int date = ConvertDateAndTime.GetDayFromStringDate(strDateTo);
+            task.SetDateTo(year, month, date);
+        }
+
+        if (!timeToConfirm.isChecked()&&taskTimeTo.getText()!="Press to set") {
+            String strTimeTo = taskTimeTo.getText().toString();
+            int hour = ConvertDateAndTime.GetHourFromStringTime(strTimeTo);
+            int minutes = ConvertDateAndTime.GetMinutesFromStringTime(strTimeTo);
+            task.SetTimeTo(hour, minutes);
         }
 
         return task;
@@ -428,13 +577,16 @@ public class TaskEditorFragment extends Fragment {
 
         if (!isNewTask)
             taskEditorParamsBundle.putLong("Id", TaskId);
+
         taskEditorParamsBundle.putString("Name", curTask.GetName());
         taskEditorParamsBundle.putString("Comment", curTask.GetComment());
-        taskEditorParamsBundle.putString("Date", curTask.GetDate());
-        taskEditorParamsBundle.putString("Time", curTask.GetTime());
-        taskEditorParamsBundle.putDouble("Duration", curTask.GetDuration());
+        taskEditorParamsBundle.putString("DateFrom", curTask.GetDateFrom());
+        taskEditorParamsBundle.putString("TimeFrom", curTask.GetTimeFrom());
+        //taskEditorParamsBundle.putDouble("Duration", curTask.GetDuration());
         taskEditorParamsBundle.putBoolean("Visibility", curTask.GetVisibility());
         taskEditorParamsBundle.putBoolean("Editable", curTask.GetEditable());
+        taskEditorParamsBundle.putString("DateTo", curTask.GetDateTo());
+        taskEditorParamsBundle.putString("TimeTo", curTask.GetTimeTo());
 
 
         this.setArguments(taskEditorParamsBundle);
