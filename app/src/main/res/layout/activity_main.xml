@@ -5,18 +5,15 @@
     android:id="@+id/activity_custom_calendar"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-
     tools:context="com.example.lighthead.androidcustomcalendar.MainActivity">
-
-
-
-
 
     <FrameLayout
         android:id="@+id/frame_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        />
+
 
 
     <android.support.design.widget.BottomNavigationView
@@ -32,8 +29,8 @@
         app:itemBackground="@color/colorWhite"
         app:itemIconTint="@color/colorPrimary"
         app:itemTextColor="@color/colorPrimary"
-        app:menu="@menu/navigation" >
-
+        app:menu="@menu/navigation"
+        app:layout_behavior="@string/hide_bottom_view_on_scroll_behavior">
     </android.support.design.widget.BottomNavigationView>
 
 

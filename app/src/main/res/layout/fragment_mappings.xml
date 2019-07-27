@@ -3,12 +3,155 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MappingsFragment">
+    tools:context=".fragments.MappingsFragment">
+
 
     <!-- TODO: Update blank fragment layout -->
-    <TextView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:text="Mappings fragment" />
+        android:orientation="vertical">
+        <ListView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/mapElements"></ListView>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:orientation="vertical"
+            android:id="@+id/mapPanel">
+            <TextView
+                android:id="@+id/fromTv"
+                android:layout_width="42dp"
+                android:layout_height="22dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginLeft="8dp"
+                android:layout_marginTop="8dp"
+                style="@style/TextViewParamName"
+                android:text="From" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/mappingDateFrom"
+                    android:layout_width="145dp"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentLeft="true"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginLeft="4dp"
+                    android:layout_marginTop="8dp"
+                    android:paddingRight="50dp"
+                    android:text="Set date"
+                    style="@style/TextViewParamValue"
+                    android:background="@drawable/datetimeshape"
+                    android:onClick="setDateFrom"/>
+
+                <TextView
+                    android:id="@+id/mappingTimeFrom"
+                    android:layout_width="168dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginLeft="8dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_toRightOf="@id/customUnavailableDateFrom"
+                    android:paddingRight="50dp"
+                    android:text="Set time"
+                    style="@style/TextViewParamValue"
+                    android:background="@drawable/datetimeshape"
+                    android:onClick="setTimeFrom"/>
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/toTv"
+                android:layout_width="42dp"
+                android:layout_height="20dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginLeft="8dp"
+                android:layout_marginTop="8dp"
+                style="@style/TextViewParamName"
+                android:text="To" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/mappingDateTo"
+                    android:layout_width="145dp"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentLeft="true"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginLeft="4dp"
+                    android:layout_marginTop="8dp"
+                    android:paddingRight="50dp"
+                    android:text="Set date"
+                    style="@style/TextViewParamValue"
+                    android:background="@drawable/datetimeshape"
+                    android:onClick="setDateTo"/>
+
+                <TextView
+                    android:id="@+id/mappingTimeTo"
+                    android:layout_width="167dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginLeft="8dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_toRightOf="@id/customUnavailableDateTo"
+                    android:paddingRight="50dp"
+                    android:text="Set time"
+                    style="@style/TextViewParamValue"
+                    android:background="@drawable/datetimeshape"
+                    android:onClick="setTimeTo"/>
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/runMappingButton"
+                android:layout_width="370dp"
+                android:layout_height="37dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginLeft="8dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginRight="8dp"
+                android:text="Show intervals"
+                android:background="@drawable/buttonshape"
+                android:textColor="@color/colorWhite"
+                android:onClick="RunMapping"/>
+
+
+
+
+
+
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/showMappingPanelButton"
+            android:layout_width="370dp"
+            android:layout_height="37dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginLeft="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginRight="8dp"
+            android:text="Parameters"
+            android:background="@drawable/buttonshape"
+            android:textColor="@color/colorWhite"
+            android:onClick="ShowMappingPanel"/>
+
+        <ListView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/mappingResults"></ListView>
+
+
+    </LinearLayout>
+
 
 </FrameLayout>

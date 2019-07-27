@@ -3,7 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:id="@+id/singleTask">
 
     <TextView
         android:id="@+id/taskDayOfWeek"
@@ -26,7 +27,6 @@
         android:layout_marginLeft="36dp"
         android:text="taskName"
         android:textSize="35dp"
-        app:layout_constraintLeft_toLeftOf="@id/taskDateFrom"
         app:layout_constraintStart_toEndOf="@+id/taskDayOfWeek"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -38,7 +38,6 @@
         android:layout_marginLeft="36dp"
         android:layout_marginTop="8dp"
         android:text="taskComment"
-        app:layout_constraintLeft_toLeftOf="@id/taskDateFrom"
         app:layout_constraintStart_toEndOf="@+id/taskDayOfWeek"
         app:layout_constraintTop_toBottomOf="@+id/taskName" />
 

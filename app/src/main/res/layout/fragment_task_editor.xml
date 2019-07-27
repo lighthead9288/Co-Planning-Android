@@ -3,12 +3,14 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".TaskEditorFragment">
+    tools:context=".fragments.TaskEditorFragment">
 
     <ScrollView
         xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:verticalScrollbarPosition="right"
+        android:visibility="visible"
         android:paddingTop="10dp"
         android:paddingBottom="8dp">
 
@@ -16,6 +18,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="264dp"
+            android:paddingTop="5dp"
+            android:paddingBottom="5dp"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
             android:orientation="vertical"
             >
 
@@ -23,21 +29,25 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Task editor"
+                style="@style/TextViewParamName"
                 android:textAlignment="center" />
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                style="@style/TextViewParamName"
                 android:text="Name" />
 
             <EditText
                 android:id="@+id/taskName"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:background="@drawable/rounded_edittext"/>
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                style="@style/TextViewParamName"
                 android:text="Comment " />
 
             <EditText
@@ -46,126 +56,170 @@
                 android:layout_height="wrap_content"
                 android:ems="10"
                 android:inputType="textMultiLine"
+                android:background="@drawable/rounded_edittext"
                 tools:layout_editor_absoluteX="0dp"
                 tools:layout_editor_absoluteY="125dp" />
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Date from" />
-
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
-                <TextView
-                    android:id="@+id/taskDateFrom"
+                android:orientation="horizontal"
+                android:background="@drawable/datetimeshape"
+                android:layout_marginTop="5dp">
+
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:onClick="setDateFrom"
+                    android:orientation="vertical"
                     android:paddingRight="50dp"
-                    />
-                <CheckBox
+                    >
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        style="@style/TextViewParamName"
+                        android:text="Date from" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+                        <TextView
+                            android:id="@+id/taskDateFrom"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            style="@style/TextViewParamValue"
+                            android:background="@drawable/datetimeshape"
+                            android:onClick="setDateFrom"
+                            />
+                        <CheckBox
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:id="@+id/dateFromConfirm"
+                            android:text="Not specified"
+                            android:onClick="TaskDateFromConfirmSet"
+
+                            />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:id="@+id/dateFromConfirm"
-                    android:text="Not specified"
-                    android:onClick="TaskDateFromConfirmSet"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        style="@style/TextViewParamName"
+                        android:text="Time from" />
 
-                    />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+                        <TextView
+                            android:id="@+id/taskTimeFrom"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            style="@style/TextViewParamValue"
+                            android:background="@drawable/datetimeshape"
+                            android:onClick="setTimeFrom"
+                            />
+                        <CheckBox
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:id="@+id/timeFromConfirm"
+                            android:text="Not specified"
+                            android:onClick="TaskTimeFromConfirmSet"
+                            />
+
+                    </LinearLayout>
+                </LinearLayout>
             </LinearLayout>
-
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Time from" />
-
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-                <TextView
-                    android:id="@+id/taskTimeFrom"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:onClick="setTimeFrom"
-                    android:paddingRight="50dp"
-                    />
-                <CheckBox
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:id="@+id/timeFromConfirm"
-                    android:text="Not specified"
-                    android:onClick="TaskTimeFromConfirmSet"
-                    />
-
-            </LinearLayout>
-
-
-
-
-
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Date to" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-                <TextView
-                    android:id="@+id/taskDateTo"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:onClick="setDateTo"
-                    android:paddingRight="50dp"
-                    />
-                <CheckBox
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:id="@+id/dateToConfirm"
-                    android:text="Not specified"
-                    android:onClick="TaskDateToConfirmSet"
-
-                    />
-            </LinearLayout>
-
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Time to" />
 
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
-                <TextView
-                    android:id="@+id/taskTimeTo"
+                android:orientation="horizontal"
+                android:background="@drawable/datetimeshape"
+                android:layout_marginTop="5dp">
+
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:onClick="setTimeTo"
+                    android:orientation="vertical"
                     android:paddingRight="50dp"
-                    />
-                <CheckBox
+                    >
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        style="@style/TextViewParamName"
+                        android:text="Date to" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+                        <TextView
+                            android:id="@+id/taskDateTo"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            style="@style/TextViewParamValue"
+                            android:background="@drawable/datetimeshape"
+                            android:onClick="setDateTo"
+                            />
+                        <CheckBox
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:id="@+id/dateToConfirm"
+                            android:text="Not specified"
+                            android:onClick="TaskDateToConfirmSet"
+
+                            />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:id="@+id/timeToConfirm"
-                    android:text="Not specified"
-                    android:onClick="TaskTimeToConfirmSet"
-                    />
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        style="@style/TextViewParamName"
+                        android:text="Time to" />
 
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+                        <TextView
+                            android:id="@+id/taskTimeTo"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            style="@style/TextViewParamValue"
+                            android:background="@drawable/datetimeshape"
+                            android:onClick="setTimeTo"
+                            />
+                        <CheckBox
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:id="@+id/timeToConfirm"
+                            android:text="Not specified"
+                            android:onClick="TaskTimeToConfirmSet"
+                            />
+
+                    </LinearLayout>
+                </LinearLayout>
             </LinearLayout>
-
 
 
 
@@ -187,12 +241,14 @@
                 android:id="@+id/taskVisibility"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                style="@style/TextViewParamName"
                 android:text="Visibility" />
 
             <CheckBox
                 android:id="@+id/taskEditable"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                style="@style/TextViewParamName"
                 android:text="Editable" />
 
             <Button
@@ -201,6 +257,8 @@
                 android:layout_height="wrap_content"
                 android:text="SAVE"
                 android:onClick="SaveTask"
+                android:background="@drawable/buttonshape"
+                android:textColor="@color/colorWhite"
                 />
 
 
