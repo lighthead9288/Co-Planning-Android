@@ -1,4 +1,4 @@
-# Co-Planning-Android-
+# Co-Planning
 
 Planning your own time is an important part of our life. Everybody made schedules ever, because everybody had a list of tasks that should be completed at exact time. 
 And, quite possibly, there is a task in this list, which should done by several people, and you should take into account a schedule of other person. And what if there are several such people?
