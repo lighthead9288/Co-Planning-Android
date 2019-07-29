@@ -22,3 +22,8 @@ Match schedules:
 
 Subscribe on schedules or tasks:
 ![](subscribe_unsubscribe.gif)
+
+In developing:
+1. Push notifications;
+2. Editing other user's tasks;
+3. Pass your tasks to other user;
