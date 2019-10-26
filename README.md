@@ -13,7 +13,7 @@ Create a task:
 ![](create_and_edit_tasks.gif)
 
 Search other users and subscribe on their schedules or tasks:
-![](subscribe_unsubscribe_on_schedules.gif)
+![](subscribe_unsubscribe_on_schedule.gif)
 
 Customize a visibility of a task, if you don`t want that other users can see a name of your task:
 ![](Change_visibility.gif)
