@@ -1,11 +1,10 @@
 package com.example.lighthead.androidcustomcalendar.fragments;
 
+import android.app.Activity;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,9 +13,12 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.example.lighthead.androidcustomcalendar.BadgesOperations;
 import com.example.lighthead.androidcustomcalendar.FragmentTypes;
 import com.example.lighthead.androidcustomcalendar.Global;
 import com.example.lighthead.androidcustomcalendar.SharedPreferencesOperations;
+import com.example.lighthead.androidcustomcalendar.helpers.FragmentOperations;
+import com.example.lighthead.androidcustomcalendar.helpers.communication.SocketClient;
 import com.example.lighthead.androidcustomcalendar.interfaces.ICoPlanningAPI;
 import com.example.lighthead.androidcustomcalendar.R;
 import com.example.lighthead.androidcustomcalendar.helpers.communication.RetrofitClient;
@@ -55,14 +57,15 @@ public class LoginFragment extends Fragment {
     private EditText passwordEditText;
     //endregion
 
-    Global global = new Global();
+    private Global global = new Global();
 
-	
+    private Activity currentActivity;
 	private Call<User> login;
 
-	//region iSharedPrefsOperations
-    SharedPreferencesOperations spa = new SharedPreferencesOperations();
-    //endregion
+    private SharedPreferencesOperations sp = new SharedPreferencesOperations();
+    private BadgesOperations badgesOperations = new BadgesOperations();
+    private SocketClient socketClient;
+    private FragmentOperations fragmentOperations;
 
     public LoginFragment() {
         // Required empty public constructor
@@ -133,8 +136,12 @@ public class LoginFragment extends Fragment {
 
         //endregion
 
+        fragmentOperations = new FragmentOperations(getFragmentManager());
+        global.HideBottomNavigationView();
+
         return view;
     }
+
 
     //region Listeners
 
@@ -153,44 +160,60 @@ public class LoginFragment extends Fragment {
 
 				if (user!=null) {
 
-                    Log.d("MyLog", "Что-то прилетело");
-                    Log.d("MyLog", user.username);
-
 					String login = loginEditText.getText().toString();
 					String password = passwordEditText.getText().toString();
 					
-                    spa.ClearSharedPreferences();
-                    spa.SetSharedPreferences(login, password);
+                    sp.ClearSharedPreferences();
+                    sp.SetSharedPreferences(login, password);
 
+                   // socketClient.mSocket.connect();
+                    socketClient.Connect();
+                    socketClient.SetNotificationsListener(null);
+                    socketClient.SetFullNotificationsListListener(null);
+                    socketClient.SetNotificationsReceiver(login);
+
+
+                    global.SetCurSchedFragment(new TaskListFragment());
 					global.SetCurSearchFragment(new SearchFragment());
 					global.SetCurMappingsFragment(new MappingsFragment());
 					global.SetCurNotificationsFragment(new NotificationsFragment());
+					global.SetCurSettingsFragment(new ProfileFragment());
+
+					global.ShowBottomNavigationView();
 					
 					FragmentTypes curFragmentType = global.GetCurFragment();
 
 					switch(curFragmentType) {
+                        case Schedule:
+                            Bundle bundle = new Bundle();
+                            bundle.putString("TaskListOption", "ThisWeek");
+                            TaskListFragment taskListFragment = new TaskListFragment();
+                            taskListFragment.setArguments(bundle);
+                            global.SetCurSchedFragment(taskListFragment);
+                            fragmentOperations.LoadFragment(taskListFragment);
+                            break;
                         case Search:
                             SearchFragment searchFragment = new SearchFragment();
                             global.SetCurSearchFragment(searchFragment);
-                            loadFragment(searchFragment);
+                            fragmentOperations.LoadFragment(searchFragment);
                             break;
 
                         case Mappings:
                             MappingsFragment mappingsFragment = new MappingsFragment();
                             global.SetCurMappingsFragment(mappingsFragment);
-                            loadFragment(mappingsFragment);
+                            fragmentOperations.LoadFragment(mappingsFragment);
                             break;
 
                         case Notifications:
                             NotificationsFragment notifyFragment = new NotificationsFragment();
                             global.SetCurNotificationsFragment(notifyFragment);
-                            loadFragment(notifyFragment);
+                            fragmentOperations.LoadFragment(notifyFragment);
                             break;
 
                         case Settings:
                             Fragment settingsFragment = new ProfileFragment();
                             global.SetCurSettingsFragment(settingsFragment);
-                            loadFragment(settingsFragment);
+                            fragmentOperations.LoadFragment(settingsFragment);
                             break;
                     }
 
@@ -214,24 +237,11 @@ public class LoginFragment extends Fragment {
     public void openRegister(View view) {
 
         RegisterFragment registerFragment = new RegisterFragment();
-        loadFragment(registerFragment);
+        fragmentOperations.LoadFragment(registerFragment);
     }
 
     //endregion
 
-    //region LoadFragment
-
-    private void loadFragment(Fragment fragment) {
-
-
-        // load fragment
-        FragmentTransaction transaction = getFragmentManager().beginTransaction();
-        transaction.replace(R.id.frame_container, fragment);
-        transaction.addToBackStack(null);
-        transaction.commit();
-    }
-
-    //endregion
 
     // TODO: Rename method, update argument and hook method into UI event
     public void onButtonPressed(Uri uri) {
@@ -243,6 +253,12 @@ public class LoginFragment extends Fragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
+
+        if (context instanceof Activity){
+            currentActivity=(Activity) context;
+            socketClient = new SocketClient(currentActivity, badgesOperations);
+        }
+
         if (context instanceof OnFragmentInteractionListener) {
             mListener = (OnFragmentInteractionListener) context;
         } else {
@@ -260,9 +276,6 @@ public class LoginFragment extends Fragment {
     @Override
     public void onPause() {
         super.onPause();
-
-     //   Fragment fragment = this;
-     //   global.SetCurSearchFragment(fragment);
     }
 
     /**

@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "34059244622",
+    "firebase_url": "https://co-planning.firebaseio.com",
+    "project_id": "co-planning",
+    "storage_bucket": "co-planning.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:34059244622:android:45e7132604dc0e54",
+        "android_client_info": {
+          "package_name": "com.example.lighthead.androidcustomcalendar"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "34059244622-3q4ktsd07l38qmo1udlf4mcvlbu8ivd2.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.lighthead.androidcustomcalendar",
+            "certificate_hash": "5a6f80646af6b26b35ee3ab7b886fefb6ec3677f"
+          }
+        },
+        {
+          "client_id": "34059244622-0rjpokomijcre1tmf73lf2d477d4opm7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBhjYtNZZisxzm7TPF6jNGWjtu1bYbdgNA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "34059244622-0rjpokomijcre1tmf73lf2d477d4opm7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

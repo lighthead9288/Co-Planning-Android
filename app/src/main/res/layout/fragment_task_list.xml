@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".fragments.TaskListFragment">
 
-    <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools"
+    <android.support.constraint.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
@@ -22,13 +21,50 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
-            <TextView
+           <!-- <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Task list"
                 android:id="@+id/taskListHeader"
                 style="@style/TextViewParamName"
-                android:textAlignment="center" />
+                android:textAlignment="center" />-->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_gravity="right"
+                >
+                <ImageButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/filterButton"
+                    android:layout_gravity="right"
+                    android:background="@null"
+                    android:src="@drawable/filter"
+                    android:onClick="FilterSelect"
+                    android:paddingRight="8dp"
+                    />
+
+                <ImageButton
+                    android:id="@+id/calendarButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="right"
+                    android:background="@null"
+                    android:onClick="CalendarSelect"
+                    android:paddingRight="8dp"
+                    android:src="@drawable/calendar" />
+
+            </LinearLayout>>
+
+
+            <com.example.lighthead.androidcustomcalendar.calendar.CalendarCustomView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:id="@+id/calendarView"
+                android:paddingBottom="5dp"
+                android:paddingTop="5dp"
+                />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -36,6 +72,7 @@
                 android:orientation="vertical"
                 android:paddingTop="8dp"
                 android:paddingBottom="8dp">
+
 
                 <RadioGroup
                     android:id="@+id/readyPeriodsRadioGroup"
@@ -105,25 +142,6 @@
 
                     </LinearLayout>
 
-                    <Button
-                        android:layout_width="wrap_content"
-                        android:layout_height="31dp"
-                        android:layout_alignRight="@+id/dateFromLinearLayout"
-                        android:layout_marginTop="12dp"
-                        android:layout_marginRight="8dp"
-                        android:layout_marginBottom="8dp"
-                        android:paddingTop="2dp"
-                        android:paddingBottom="2dp"
-                        android:paddingLeft="5dp"
-                        android:paddingRight="5dp"
-                        android:background="@drawable/buttonshape"
-                        android:text="Hide parameters"
-                        android:textSize="10dp"
-                        android:id="@+id/paramsEnableButton"
-                        android:textColor="@color/colorWhite"
-                        android:onClick="ParamsEnable"
-
-                        />
                 </RelativeLayout>
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -155,19 +173,21 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent">
 
-                    <ListView
-                        android:id="@+id/taskList"
-                        android:layout_width="match_parent"
+                    <ExpandableListView
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:choiceMode="multipleChoice"/>
+                        android:id="@+id/expandableTaskList"
+                        android:groupIndicator="@null"
+                        />
 
                     <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="match_parent"
-                        android:layout_alignRight="@+id/taskList"
                         android:layout_marginEnd="8dp"
                         android:layout_marginRight="8dp"
                         android:orientation="vertical"
+                        android:layout_alignRight="@+id/expandableTaskList"
+
 
                         >
                         <ImageButton
@@ -178,6 +198,7 @@
                             android:layout_gravity="right"
                             android:background="@null"
                             android:src="@drawable/add"
+                            android:layout_marginTop="10dp"
                             android:layout_marginBottom="11dp"
                             android:layout_marginRight="5dp"
                             android:onClick="AddTask"
@@ -194,7 +215,7 @@
                             android:layout_marginRight="5dp"
                             android:onClick="EditTask"
                             />
-                        <ImageButton
+                     <!--   <ImageButton
                             android:id="@+id/copyTask"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -217,7 +238,7 @@
                             android:layout_marginRight="5dp"
                             android:src="@drawable/carry"
                             android:onClick="CarryTask"
-                            />
+                            />-->
                         <ImageButton
                             android:id="@+id/deleteTask"
                             android:layout_width="wrap_content"
@@ -230,7 +251,7 @@
                             android:layout_marginRight="5dp"
                             android:onClick="DeleteTask"
                             />
-                        <ImageButton
+                       <!-- <ImageButton
                             android:id="@+id/uploadTaskList"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -252,7 +273,7 @@
                             android:src="@drawable/download"
                             android:layout_marginBottom="11dp"
                             android:layout_marginRight="5dp"
-                            android:visibility="invisible"/>
+                            android:visibility="invisible"/>-->
 
                     </LinearLayout>
 

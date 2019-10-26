@@ -1,11 +1,10 @@
 package com.example.lighthead.androidcustomcalendar;
 
-import android.app.Activity;
 import android.app.Application;
-import android.content.SharedPreferences;
+import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.Fragment;
+import android.view.View;
 
-import java.util.ArrayList;
 
 public class Global extends Application {
     private static Fragment curSchedFragment;
@@ -20,29 +19,23 @@ public class Global extends Application {
 	
 	private static FragmentTypes curFragment;
 
-	private static ArrayList<String> MappingElements = new ArrayList<>();
+	private static BottomNavigationView bottomNavigationView;
 
-
-	public ArrayList<String> GetMappingElements(){
-	    return MappingElements;
+	public void SetBottomNavigationView(BottomNavigationView navigation) {
+	    bottomNavigationView = navigation;
     }
 
-    public void SetMappingsElements(ArrayList<String> elements) {
-	    MappingElements = elements;
+    public void ShowBottomNavigationView() {
+	    if (bottomNavigationView!=null) {
+	        bottomNavigationView.setVisibility(View.VISIBLE);
+        }
     }
 
-    public void AddMappingElement(String element) {
-	    MappingElements.add(element);
+    public void HideBottomNavigationView() {
+	    if (bottomNavigationView!=null) {
+	        bottomNavigationView.setVisibility(View.GONE);
+        }
     }
-
-    public void RemoveMappingElement(String element) {
-	    MappingElements.remove(element);
-    }
-
-    public void ClearMappingElements() {
-	    MappingElements.clear();
-    }
-
 
 	public FragmentTypes GetCurFragment(){
 
@@ -91,8 +84,6 @@ public class Global extends Application {
 
     public void SetCurSettingsFragment(Fragment fragment) { curSettingsFragment = fragment;}
 	
-
-
 
     public Global(){
 

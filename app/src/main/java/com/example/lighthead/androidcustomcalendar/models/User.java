@@ -7,20 +7,62 @@ import java.util.ArrayList;
 
 public class User implements Serializable {
 
-    public String name = new String();
+    private String name = new String();
 
-    public String surname = new String();
+    private String surname = new String();
 
-   // public String Password = new String();
-  //  public String About=new String();
-    public ArrayList</*TaskDBWrapper*/ServerTask> taskList = new ArrayList</*TaskDBWrapper*/ServerTask>();
+    private ArrayList<ServerTask> taskList = new ArrayList<ServerTask>();
 
-    public ArrayList<String> subscriberList = new ArrayList<>();
+    private ArrayList<String> subscriberList = new ArrayList<>();
 
-    public String username = new String();
+    private String username = new String();
 
-    public int _v;
+    private int _v;
 
-    public String _id = new String();
+    private String _id = new String();
+	
+	
+	
+	public String GetName() {
+		return name;
+	}
+	
+	public void SetName(String name) {
+		this.name = name;
+	}
+	
+	public String GetSurname() {
+		return surname;
+	}
+	
+	public void SetSurname(String surname) {
+		this.surname = surname;
+	}
+
+	public String GetUsername() {return username;}
+
+	public void SetUsername(String username) {this.username = username;}
+	
+	public ArrayList<ServerTask> GetTaskList() {
+		return taskList;
+	}
+	
+	public void SetTaskList(ArrayList<ServerTask> taskList) {
+		this.taskList = taskList;
+	}
+	
+	public ArrayList<String> GetSubscriberList() {
+		return subscriberList;
+	}
+	
+	public void SetSubscriberList(ArrayList<String> subscriberList) {
+		this.subscriberList = subscriberList;
+	}
+
+	public void AddSubscriber(String subscriber) {
+		this.subscriberList.add(subscriber);
+	}
+	
+	
 
 }

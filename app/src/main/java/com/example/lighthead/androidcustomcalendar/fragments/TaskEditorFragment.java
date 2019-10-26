@@ -16,11 +16,13 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.TimePicker;
 
+import com.example.lighthead.androidcustomcalendar.SharedPreferencesOperations;
 import com.example.lighthead.androidcustomcalendar.helpers.ConvertDateAndTime;
 import com.example.lighthead.androidcustomcalendar.Global;
 import com.example.lighthead.androidcustomcalendar.R;
+import com.example.lighthead.androidcustomcalendar.helpers.communication.ServerTaskManager;
+import com.example.lighthead.androidcustomcalendar.helpers.taskWrappers.ServerTask;
 import com.example.lighthead.androidcustomcalendar.models.Task;
-import com.example.lighthead.androidcustomcalendar.helpers.db.TaskManager;
 
 import java.util.Calendar;
 
@@ -35,40 +37,41 @@ import java.util.Calendar;
  */
 public class TaskEditorFragment extends Fragment {
 
-    View view;
-
+    private View view;
 
     //region Controls
-    EditText taskName;
-    EditText taskComment;
-    TextView taskDateFrom;
-    TextView taskTimeFrom;
-    TextView taskDateTo;
-    TextView taskTimeTo;
-    CheckBox taskVisibility;
-    CheckBox taskEditable;
+    private EditText taskName;
+    private EditText taskComment;
+    private TextView taskDateFrom;
+    private TextView taskTimeFrom;
+    private TextView taskDateTo;
+    private TextView taskTimeTo;
+    private CheckBox taskVisibility;
+    private CheckBox taskEditable;
 
-    CheckBox dateFromConfirm;
-    CheckBox timeFromConfirm;
-    CheckBox dateToConfirm;
-    CheckBox timeToConfirm;
+    private CheckBox dateFromConfirm;
+    private CheckBox timeFromConfirm;
+    private CheckBox dateToConfirm;
+    private CheckBox timeToConfirm;
 
-    Button saveButton;
+    private Button saveButton;
     //endregion
 
-    boolean isNewTask=true;
-    private long TaskId;
+    private boolean isNewTask=true;
+    private int TaskId;
     private String ServerTaskNumber;
-    boolean EditedTaskCompleted = false;
+    private boolean EditedTaskCompleted = false;
 
-    Calendar dateAndTimeFrom=Calendar.getInstance();
-    Calendar dateAndTimeTo = Calendar.getInstance();
+    private Calendar dateAndTimeFrom=Calendar.getInstance();
+    private Calendar dateAndTimeTo = Calendar.getInstance();
 
-    Bundle taskEditorParamsBundle;
+    private Bundle taskEditorParamsBundle;
 
-    Global global = new Global();
+    private String login;
+    private String password;
 
-
+    private Global global = new Global();
+    private SharedPreferencesOperations sp = new SharedPreferencesOperations();
 
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -207,7 +210,7 @@ public class TaskEditorFragment extends Fragment {
         isNewTask = taskEditorParamsBundle.getBoolean("isNewTask");
 
         if (!isNewTask) {
-            TaskId = taskEditorParamsBundle.getLong("Id");
+            TaskId = taskEditorParamsBundle.getInt("serverTaskNumber");
             ServerTaskNumber = taskEditorParamsBundle.getString("serverTaskNumber");
             EditedTaskCompleted = taskEditorParamsBundle.getBoolean("Completed");
         }
@@ -219,12 +222,12 @@ public class TaskEditorFragment extends Fragment {
 
 
         String strDateFrom = taskEditorParamsBundle.getString("DateFrom");
-        if (!(strDateFrom==null)) {
-            year = ConvertDateAndTime.GetYearFromStringDate(strDateFrom);
+        if ((strDateFrom!=null)&&(strDateFrom!="")) {
+            year = ConvertDateAndTime.GetYearFromISOStringDate(strDateFrom);
             dateAndTimeFrom.set(Calendar.YEAR, year);
-            month = ConvertDateAndTime.GetMonthFromStringDate(strDateFrom);
+            month = ConvertDateAndTime.GetMonthFromISOStringDate(strDateFrom);
             dateAndTimeFrom.set(Calendar.MONTH, month-1);
-            date = ConvertDateAndTime.GetDayFromStringDate(strDateFrom);
+            date = ConvertDateAndTime.GetDayFromISOStringDate(strDateFrom);
             dateAndTimeFrom.set(Calendar.DAY_OF_MONTH, date);
             taskDateFrom.setText(strDateFrom);
         }
@@ -235,10 +238,10 @@ public class TaskEditorFragment extends Fragment {
         }
 
         String strTimeFrom = taskEditorParamsBundle.getString("TimeFrom");
-        if (!(strTimeFrom==null)) {
-            hours = ConvertDateAndTime.GetHourFromStringTime(strTimeFrom);
+        if ((strTimeFrom!=null)&&(strTimeFrom!="")) {
+            hours = ConvertDateAndTime.GetHourFromISOStringTime(strTimeFrom);
             dateAndTimeFrom.set(Calendar.HOUR_OF_DAY, hours);
-            minutes = ConvertDateAndTime.GetMinutesFromStringTime(strTimeFrom);
+            minutes = ConvertDateAndTime.GetMinutesFromISOStringTime(strTimeFrom);
             dateAndTimeFrom.set(Calendar.MINUTE, minutes);
             taskTimeFrom.setText(strTimeFrom);
         }
@@ -250,12 +253,12 @@ public class TaskEditorFragment extends Fragment {
 
 
         String strDateTo = taskEditorParamsBundle.getString("DateTo");
-        if (!(strDateTo==null)) {
-            year = ConvertDateAndTime.GetYearFromStringDate(strDateTo);
+        if ((strDateTo!=null)&&(strDateTo!="")) {
+            year = ConvertDateAndTime.GetYearFromISOStringDate(strDateTo);
             dateAndTimeTo.set(Calendar.YEAR, year);
-            month = ConvertDateAndTime.GetMonthFromStringDate(strDateTo);
+            month = ConvertDateAndTime.GetMonthFromISOStringDate(strDateTo);
             dateAndTimeTo.set(Calendar.MONTH, month-1);
-            date = ConvertDateAndTime.GetDayFromStringDate(strDateTo);
+            date = ConvertDateAndTime.GetDayFromISOStringDate(strDateTo);
             dateAndTimeTo.set(Calendar.DAY_OF_MONTH, date);
             taskDateTo.setText(strDateTo);
         }
@@ -266,10 +269,10 @@ public class TaskEditorFragment extends Fragment {
         }
 
         String strTimeTo = taskEditorParamsBundle.getString("TimeTo");
-        if (!(strTimeTo==null)) {
-            hours = ConvertDateAndTime.GetHourFromStringTime(strTimeTo);
+        if ((strTimeTo!=null)&&(strTimeTo!="")) {
+            hours = ConvertDateAndTime.GetHourFromISOStringTime(strTimeTo);
             dateAndTimeTo.set(Calendar.HOUR_OF_DAY, hours);
-            minutes = ConvertDateAndTime.GetMinutesFromStringTime(strTimeTo);
+            minutes = ConvertDateAndTime.GetMinutesFromISOStringTime(strTimeTo);
             dateAndTimeTo.set(Calendar.MINUTE, minutes);
             taskTimeTo.setText(strTimeTo);
         }
@@ -283,6 +286,9 @@ public class TaskEditorFragment extends Fragment {
         taskEditable.setChecked(taskEditorParamsBundle.getBoolean("Editable"));
 
         //endregion
+
+        login = sp.GetLogin();
+        password = sp.GetPassword();
 
         // Inflate the layout for this fragment
         return view;
@@ -365,16 +371,20 @@ public class TaskEditorFragment extends Fragment {
     public void SaveTask(View view) {
 
         Task task = GetTaskFromViewCommand();
-        TaskManager tm = new TaskManager(getContext());
+        ServerTask serverTask = new ServerTask(task);
+      //  TaskManager tm = new TaskManager(getContext());
+
+        ServerTaskManager stm = new ServerTaskManager(null);
 
         if (isNewTask) {
-            tm.AddTask(task);
+           // tm.AddTask(task);
+            stm.AddTask(login, serverTask);
             getFragmentManager().popBackStack();
-
 
         }
         else {
-            tm.UpdateTask(task, TaskId);
+            //tm.UpdateTask(task, TaskId);
+            stm.UpdateTask(login, serverTask, TaskId);
             getFragmentManager().popBackStack();
         }
 
@@ -409,7 +419,6 @@ public class TaskEditorFragment extends Fragment {
     }
 
     //endregion
-
 
     //region Commands
     private void DisableDateFromSetCommand() {
@@ -459,7 +468,7 @@ public class TaskEditorFragment extends Fragment {
 
         int dispMonth = month+1;
 
-        taskDateFrom.setText(ConvertDateAndTime.ConvertToStringDate(year, dispMonth, date));
+        taskDateFrom.setText(ConvertDateAndTime.ConvertToISOStringDate(year, dispMonth, date));
 
         dateAndTimeFrom.set(year, month, date);
 
@@ -470,7 +479,7 @@ public class TaskEditorFragment extends Fragment {
         int hours = fullDate.get(Calendar.HOUR_OF_DAY);
         int minutes = fullDate.get(Calendar.MINUTE);
 
-        taskTimeFrom.setText(ConvertDateAndTime.ConvertToStringTime(hours, minutes));
+        taskTimeFrom.setText(ConvertDateAndTime.ConvertToISOStringTime(hours, minutes));
 
         dateAndTimeFrom.set(Calendar.HOUR_OF_DAY, hours);
         dateAndTimeFrom.set(Calendar.MINUTE, minutes);
@@ -484,7 +493,7 @@ public class TaskEditorFragment extends Fragment {
 
         int dispMonth = month+1;
 
-        taskDateTo.setText(ConvertDateAndTime.ConvertToStringDate(year, dispMonth, date));
+        taskDateTo.setText(ConvertDateAndTime.ConvertToISOStringDate(year, dispMonth, date));
 
         dateAndTimeTo.set(year, month, date);
 
@@ -495,7 +504,7 @@ public class TaskEditorFragment extends Fragment {
         int hours = fullDate.get(Calendar.HOUR_OF_DAY);
         int minutes = fullDate.get(Calendar.MINUTE);
 
-        taskTimeTo.setText(ConvertDateAndTime.ConvertToStringTime(hours, minutes));
+        taskTimeTo.setText(ConvertDateAndTime.ConvertToISOStringTime(hours, minutes));
 
         dateAndTimeTo.set(Calendar.HOUR_OF_DAY, hours);
         dateAndTimeTo.set(Calendar.MINUTE, minutes);
@@ -523,35 +532,35 @@ public class TaskEditorFragment extends Fragment {
 
         if (!dateFromConfirm.isChecked()&&taskDateFrom.getText()!="Press to set") {
             String strDateFrom = taskDateFrom.getText().toString();
-            int year = ConvertDateAndTime.GetYearFromStringDate(strDateFrom);
-            int month = ConvertDateAndTime.GetMonthFromStringDate(strDateFrom);
-            int date = ConvertDateAndTime.GetDayFromStringDate(strDateFrom);
+            int year = ConvertDateAndTime.GetYearFromISOStringDate(strDateFrom);
+            int month = ConvertDateAndTime.GetMonthFromISOStringDate(strDateFrom);
+            int date = ConvertDateAndTime.GetDayFromISOStringDate(strDateFrom);
             task.SetDateFrom(year, month, date);
         }
 
         if (!timeFromConfirm.isChecked()&&taskTimeFrom.getText()!="Press to set") {
             String strTimeFrom = taskTimeFrom.getText().toString();
-            int hour = ConvertDateAndTime.GetHourFromStringTime(strTimeFrom);
-            int minutes = ConvertDateAndTime.GetMinutesFromStringTime(strTimeFrom);
+            int hour = ConvertDateAndTime.GetHourFromISOStringTime(strTimeFrom);
+            int minutes = ConvertDateAndTime.GetMinutesFromISOStringTime(strTimeFrom);
             task.SetTimeFrom(hour, minutes);
         }
 
         if (!dateToConfirm.isChecked()&&taskDateTo.getText()!="Press to set") {
             String strDateTo = taskDateTo.getText().toString();
-            int year = ConvertDateAndTime.GetYearFromStringDate(strDateTo);
-            int month = ConvertDateAndTime.GetMonthFromStringDate(strDateTo);
-            int date = ConvertDateAndTime.GetDayFromStringDate(strDateTo);
+            int year = ConvertDateAndTime.GetYearFromISOStringDate(strDateTo);
+            int month = ConvertDateAndTime.GetMonthFromISOStringDate(strDateTo);
+            int date = ConvertDateAndTime.GetDayFromISOStringDate(strDateTo);
             task.SetDateTo(year, month, date);
         }
 
         if (!timeToConfirm.isChecked()&&taskTimeTo.getText()!="Press to set") {
             String strTimeTo = taskTimeTo.getText().toString();
-            int hour = ConvertDateAndTime.GetHourFromStringTime(strTimeTo);
-            int minutes = ConvertDateAndTime.GetMinutesFromStringTime(strTimeTo);
+            int hour = ConvertDateAndTime.GetHourFromISOStringTime(strTimeTo);
+            int minutes = ConvertDateAndTime.GetMinutesFromISOStringTime(strTimeTo);
             task.SetTimeTo(hour, minutes);
         }
 
-        task.SetServerTaskNumber(ServerTaskNumber);
+    //    task.SetServerTaskNumber(ServerTaskNumber);
 
         return task;
 
@@ -590,8 +599,8 @@ public class TaskEditorFragment extends Fragment {
         Task curTask = GetTaskFromViewCommand();
 
         if (!isNewTask) {
-            taskEditorParamsBundle.putLong("Id", TaskId);
-            taskEditorParamsBundle.putString("serverTaskNumber", ServerTaskNumber);
+            taskEditorParamsBundle.putInt("serverTaskNumber", TaskId);
+           // taskEditorParamsBundle.putString("serverTaskNumber", ServerTaskNumber);
         }
 
         taskEditorParamsBundle.putString("Name", curTask.GetName());

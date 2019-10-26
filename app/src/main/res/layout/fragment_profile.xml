@@ -20,7 +20,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/logout" />
 
-    <ImageButton
+   <!-- <ImageButton
         android:id="@+id/addCustomUnavailableInterval"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -32,7 +32,7 @@
 
         android:src="@drawable/addinterval"
         app:layout_constraintEnd_toStartOf="@+id/saveUnavailableIntervals"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent" />-->
 
     <ImageButton
         android:id="@+id/saveUnavailableIntervals"
@@ -82,23 +82,25 @@
 
         <TextView
             android:id="@+id/textView6"
+            style="@style/TextViewParamName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="76dp"
-            android:layout_marginLeft="76dp"
+            android:layout_marginStart="60dp"
+            android:layout_marginLeft="60dp"
+            android:layout_marginTop="4dp"
             android:text="From"
-            style="@style/TextViewParamName"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textView5" />
 
         <TextView
             android:id="@+id/textView7"
+            style="@style/TextViewParamName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="116dp"
-            android:layout_marginRight="116dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginEnd="156dp"
+            android:layout_marginRight="156dp"
             android:text="To"
-            style="@style/TextViewParamName"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textView5" />
 
@@ -126,44 +128,47 @@
             app:layout_constraintTop_toBottomOf="@+id/textView7" />
     </android.support.constraint.ConstraintLayout>
 
-    <TextView
-        android:id="@+id/customInterval"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginLeft="8dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginRight="8dp"
-        android:text="Custom unavailable time"
-        style="@style/TextViewParamName"
-        android:textAlignment="center"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.497"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/defaultInterval" />
+    <!-- <TextView
+         android:id="@+id/customInterval"
+         android:layout_width="wrap_content"
+         android:layout_height="wrap_content"
+         android:layout_marginStart="8dp"
+         android:layout_marginLeft="8dp"
+         android:layout_marginTop="8dp"
+         android:layout_marginEnd="8dp"
+         android:layout_marginRight="8dp"
+         android:text="Custom unavailable time"
+         style="@style/TextViewParamName"
+         android:textAlignment="center"
+         app:layout_constraintEnd_toEndOf="parent"
+         app:layout_constraintHorizontal_bias="0.497"
+         app:layout_constraintStart_toStartOf="parent"
+         app:layout_constraintTop_toBottomOf="@+id/defaultInterval"
+         />
 
 
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginLeft="8dp"
-        android:layout_marginRight="8dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/customInterval">
+     <ScrollView
+         android:layout_width="match_parent"
+         android:layout_height="wrap_content"
+         android:layout_marginStart="8dp"
+         android:layout_marginLeft="8dp"
+         android:layout_marginRight="8dp"
+         android:fillViewport="true"
+         android:orientation="vertical"
+         app:layout_constraintStart_toStartOf="parent"
+         app:layout_constraintTop_toBottomOf="@+id/customInterval">
 
-        <LinearLayout
-            android:id="@+id/customUnavailableTimesList"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:layout_gravity="center"
-            android:layout_marginRight="5dp"
-            android:orientation="vertical"></LinearLayout>
+         <LinearLayout
+             android:id="@+id/customUnavailableTimesList"
+             android:layout_width="wrap_content"
+             android:layout_height="match_parent"
+             android:layout_weight="1"
+             android:layout_gravity="center"
+             android:layout_marginRight="5dp"
+             android:orientation="vertical"></LinearLayout>
 
 
-    </ScrollView>
+     </ScrollView>-->
 
 
 </android.support.constraint.ConstraintLayout>

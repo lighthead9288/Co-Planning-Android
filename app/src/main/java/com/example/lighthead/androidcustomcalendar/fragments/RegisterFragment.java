@@ -1,11 +1,10 @@
 package com.example.lighthead.androidcustomcalendar.fragments;
 
+import android.app.Activity;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,10 +13,13 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.example.lighthead.androidcustomcalendar.BadgesOperations;
 import com.example.lighthead.androidcustomcalendar.SharedPreferencesOperations;
 import com.example.lighthead.androidcustomcalendar.helpers.Credentials;
 import com.example.lighthead.androidcustomcalendar.FragmentTypes;
 import com.example.lighthead.androidcustomcalendar.Global;
+import com.example.lighthead.androidcustomcalendar.helpers.FragmentOperations;
+import com.example.lighthead.androidcustomcalendar.helpers.communication.SocketClient;
 import com.example.lighthead.androidcustomcalendar.interfaces.ICoPlanningAPI;
 import com.example.lighthead.androidcustomcalendar.R;
 import com.example.lighthead.androidcustomcalendar.helpers.communication.RetrofitClient;
@@ -49,23 +51,25 @@ public class RegisterFragment extends Fragment {
 
     private OnFragmentInteractionListener mListener;
 
-    Global global = new Global();
+    private Activity currentActivity;
 
 	private Call<User> register;
 
 	//region Controls
 
-	EditText nameEditText;
-	EditText surnameEditText;
-	EditText usernameEditText;
-	EditText passwordEditText;
-	Button registerButton;
+    private EditText nameEditText;
+    private EditText surnameEditText;
+    private EditText usernameEditText;
+    private EditText passwordEditText;
+    private Button registerButton;
 
 	//endregion
 
-    //region iSharedPrefsOperations
-    SharedPreferencesOperations spa = new SharedPreferencesOperations();
-    //endregion
+    private SharedPreferencesOperations spa = new SharedPreferencesOperations();
+    private BadgesOperations badgesOperations = new BadgesOperations();
+    private Global global = new Global();
+    private SocketClient socketClient;
+    private FragmentOperations fragmentOperations;
 
     public RegisterFragment() {
         // Required empty public constructor
@@ -80,12 +84,8 @@ public class RegisterFragment extends Fragment {
 
         ICoPlanningAPI client = retrofit.create(ICoPlanningAPI.class);
 		
-		Credentials credentials = new Credentials();
-		credentials.name = nameEditText.getText().toString();
-		credentials.surname = surnameEditText.getText().toString();
-		credentials.username = usernameEditText.getText().toString();
-		credentials.password = passwordEditText.getText().toString();
-		
+		Credentials credentials = new Credentials(nameEditText.getText().toString(), surnameEditText.getText().toString(), usernameEditText.getText().toString(), passwordEditText.getText().toString());
+
 		register = client.register(credentials);
 		
 		register.enqueue(new Callback<User>() {
@@ -95,47 +95,59 @@ public class RegisterFragment extends Fragment {
 				
 				if (user!=null) {
 
-                    Log.d("MyLog", "Что-то прилетело");
-                    Log.d("MyLog", user.username);
-
 					String login = usernameEditText.getText().toString();
 					String password = passwordEditText.getText().toString();
 					
-					//ISharedPrefsOperations.ClearSharedPreferences();
                     spa.ClearSharedPreferences();
-					//ISharedPrefsOperations.SetSharedPreferences(login, password);
                     spa.SetSharedPreferences(login, password);
-					
-					global.SetCurSearchFragment(new SearchFragment());
+
+                   // socketClient.mSocket.connect();
+                    socketClient.Connect();
+                    socketClient.SetNotificationsListener(null);
+                    socketClient.SetFullNotificationsListListener(null);
+                    socketClient.SetNotificationsReceiver(login);
+
+
+                    global.SetCurSchedFragment(new TaskListFragment());
+                    global.SetCurSearchFragment(new SearchFragment());
 					global.SetCurMappingsFragment(new MappingsFragment());
 					global.SetCurNotificationsFragment(new NotificationsFragment());
+
+                    global.ShowBottomNavigationView();
 
                     FragmentTypes curFragmentType = global.GetCurFragment();
 
                     switch(curFragmentType) {
+                        case Schedule:
+                            Bundle bundle = new Bundle();
+                            bundle.putString("TaskListOption", "ThisWeek");
+                            TaskListFragment taskListFragment = new TaskListFragment();
+                            taskListFragment.setArguments(bundle);
+                            global.SetCurSchedFragment(taskListFragment);
+                            fragmentOperations.LoadFragment(taskListFragment);
+                            break;
                         case Search:
                             SearchFragment searchFragment = new SearchFragment();
                             global.SetCurSearchFragment(searchFragment);
-                            loadFragment(searchFragment);
+                            fragmentOperations.LoadFragment(searchFragment);
                             break;
 
                         case Mappings:
                             MappingsFragment mappingsFragment = new MappingsFragment();
                             global.SetCurMappingsFragment(mappingsFragment);
-                            loadFragment(mappingsFragment);
+                            fragmentOperations.LoadFragment(mappingsFragment);
                             break;
 
                         case Notifications:
                             NotificationsFragment notifyFragment = new NotificationsFragment();
                             global.SetCurNotificationsFragment(notifyFragment);
-                            loadFragment(notifyFragment);
+                            fragmentOperations.LoadFragment(notifyFragment);
                             break;
 
                         case Settings:
                             Fragment settingsFragment = new ProfileFragment();
-                           // ((ProfileFragment) settingsFragment).SetISharedPrefsOperations(ISharedPrefsOperations);
                             global.SetCurSettingsFragment(settingsFragment);
-                            loadFragment(settingsFragment);
+                            fragmentOperations.LoadFragment(settingsFragment);
                             break;
                     }
 				}
@@ -150,21 +162,11 @@ public class RegisterFragment extends Fragment {
                 Toast.makeText(getContext(), "Error!!!", Toast.LENGTH_SHORT);
             }
         });
+
+        fragmentOperations = new FragmentOperations(getFragmentManager());
 	}
 
 	//endregion
-
-    //region LoadFragment
-	
-	private void loadFragment(Fragment fragment) {
-        // load fragment
-        FragmentTransaction transaction = getFragmentManager().beginTransaction();
-        transaction.replace(R.id.frame_container, fragment);
-        transaction.addToBackStack(null);
-        transaction.commit();
-    }
-
-    //endregion
 
     /**
      * Use this factory method to create a new instance of
@@ -199,6 +201,7 @@ public class RegisterFragment extends Fragment {
 
         View view = inflater.inflate(R.layout.fragment_register, container, false);
 
+        //region Find and init controls
         nameEditText = view.findViewById(R.id.nameEditText);
         surnameEditText = view.findViewById(R.id.surnameEditText);
         usernameEditText = view.findViewById(R.id.usernameEditText);
@@ -211,7 +214,10 @@ public class RegisterFragment extends Fragment {
                 performRegister(v);
             }
         });
-        // Inflate the layout for this fragment
+        //endregion
+
+        global.HideBottomNavigationView();
+
         return view;
     }
 
@@ -225,6 +231,12 @@ public class RegisterFragment extends Fragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
+
+        if (context instanceof Activity){
+            currentActivity=(Activity) context;
+            socketClient = new SocketClient(currentActivity, badgesOperations);
+        }
+
         if (context instanceof OnFragmentInteractionListener) {
             mListener = (OnFragmentInteractionListener) context;
         } else {
@@ -242,9 +254,6 @@ public class RegisterFragment extends Fragment {
     @Override
     public void onPause() {
         super.onPause();
-
-       // Fragment fragment = this;
-       // global.SetCurSearchFragment(fragment);
     }
 
     /**

@@ -7,6 +7,10 @@
     android:layout_height="match_parent"
     tools:context="com.example.lighthead.androidcustomcalendar.MainActivity">
 
+    <android.support.design.widget.CoordinatorLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
     <FrameLayout
         android:id="@+id/frame_container"
         android:layout_width="match_parent"
@@ -18,7 +22,7 @@
 
     <android.support.design.widget.BottomNavigationView
         android:id="@+id/bottom_navigation"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginEnd="0dp"
         android:layout_marginStart="0dp"
@@ -30,11 +34,11 @@
         app:itemIconTint="@color/colorPrimary"
         app:itemTextColor="@color/colorPrimary"
         app:menu="@menu/navigation"
-        app:layout_behavior="@string/hide_bottom_view_on_scroll_behavior">
+        app:layout_behavior="com.example.lighthead.androidcustomcalendar.helpers.BottomNavigationBehaviour">
     </android.support.design.widget.BottomNavigationView>
 
 
-
+    </android.support.design.widget.CoordinatorLayout>
 
 
 </android.support.constraint.ConstraintLayout>

@@ -1,11 +1,10 @@
 package com.example.lighthead.androidcustomcalendar.fragments;
 
+import android.app.Activity;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,19 +16,18 @@ import com.example.lighthead.androidcustomcalendar.BadgesOperations;
 import com.example.lighthead.androidcustomcalendar.Global;
 import com.example.lighthead.androidcustomcalendar.SharedPreferencesOperations;
 import com.example.lighthead.androidcustomcalendar.R;
+import com.example.lighthead.androidcustomcalendar.helpers.FragmentOperations;
+import com.example.lighthead.androidcustomcalendar.helpers.communication.SocketClient;
 import com.example.lighthead.androidcustomcalendar.helpers.taskWrappers.ServerTask;
 import com.example.lighthead.androidcustomcalendar.models.User;
 import com.example.lighthead.androidcustomcalendar.adapters.UserAdapter;
 import com.github.nkzawa.emitter.Emitter;
-import com.github.nkzawa.socketio.client.IO;
-import com.github.nkzawa.socketio.client.Socket;
 import com.google.gson.Gson;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 
 
@@ -58,17 +56,13 @@ public class SearchFragment extends Fragment {
     private ListView usersListLv;
     //endregion
 
+    private Activity currentActivity;
+
     private UserAdapter userAdapter;
 
-    Global global = new Global();
+    private FragmentOperations fragmentOperations;
 
-    //region iBadgesOperations
-    BadgesOperations badgesOperations = new BadgesOperations();
-    //endregion
-
-    //region iSharedPrefsOperations
-    SharedPreferencesOperations spa = new SharedPreferencesOperations();
-    //endregion
+    private Global global = new Global();
 
     public SearchFragment() {
         // Required empty public constructor
@@ -92,19 +86,8 @@ public class SearchFragment extends Fragment {
         return fragment;
     }
 
-    //region Socket init
-    private Socket mSocket;
-    {
-        try {
-            mSocket = IO.socket("http://10.0.2.2:3000/");
-        } catch (URISyntaxException e) {
-            Log.d("MyLog", e.getMessage());
-            String err = e.getMessage();
-        }
-    }
-    //endregion
 
-
+    SocketClient socketClient = new SocketClient();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -151,11 +134,10 @@ public class SearchFragment extends Fragment {
 
                 UserTaskListFragment userTaskListFragment = new UserTaskListFragment();
                 userTaskListFragment.setArguments(bundle);
-                //userTaskListFragment.SetISharedPrefsOperations(ISharedPrefsOperations);
-                userTaskListFragment.SetTasks(selectedUser.taskList);
-                userTaskListFragment.SetUsername(selectedUser.username);
+                userTaskListFragment.SetTasks(selectedUser.GetTaskList());
+                userTaskListFragment.SetUsername(selectedUser.GetUsername());
                 global.SetCurSearchFragment(userTaskListFragment);
-                loadFragment(userTaskListFragment);
+                fragmentOperations.LoadFragment(userTaskListFragment);
 
             }
         };
@@ -163,11 +145,10 @@ public class SearchFragment extends Fragment {
 
         //endregion
 
-
-        mSocket.on("search", onSearchAnswer);
-        mSocket.connect();
-
+        socketClient.SetSearchAnswerListener(onSearchAnswer);
         global.SetCurSearchFragment(this);
+
+        fragmentOperations = new FragmentOperations(getFragmentManager());
 
         return view;
     }
@@ -177,7 +158,8 @@ public class SearchFragment extends Fragment {
     private Emitter.Listener onSearchAnswer = new Emitter.Listener() {
         @Override
         public void call(final Object... args) {
-            getActivity().runOnUiThread(new Runnable() {
+
+            currentActivity.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
                     JSONArray data = (JSONArray) args[0];
@@ -189,19 +171,16 @@ public class SearchFragment extends Fragment {
                             jsonobject = data.getJSONObject(i);
 
                             User user = new User();
-                            user.username = jsonobject.getString("username");
-                            user.name = jsonobject.getString("name");
-                            user.surname = jsonobject.getString("surname");
+                            user.SetUsername(jsonobject.getString("username"));
+                            user.SetName(jsonobject.getString("name"));
+                            user.SetSurname(jsonobject.getString("surname"));
 
                             JSONArray subscriberArray = jsonobject.getJSONArray("subscriberList");
                             for(int k=0; k<subscriberArray.length();k++) {
                                 String subscriber = (String)subscriberArray.get(k);
-                                user.subscriberList.add(subscriber);
-
+                                user.AddSubscriber(subscriber);
 
                             }
-
-
 
                             JSONArray taskArray = jsonobject.getJSONArray("taskList");
 
@@ -217,8 +196,7 @@ public class SearchFragment extends Fragment {
 
                             }
 
-                            user.taskList = serverTasks;
-
+                            user.SetTaskList(serverTasks);
                             usersList.add(user);
 
 
@@ -228,7 +206,7 @@ public class SearchFragment extends Fragment {
 
                     }
 
-                    userAdapter = new UserAdapter(getContext(), R.layout.singleuserlayout, usersList, getActivity());
+                    userAdapter = new UserAdapter(currentActivity, R.layout.singleuserlayout, usersList);
                     usersListLv.setAdapter(userAdapter);
 
 
@@ -243,22 +221,12 @@ public class SearchFragment extends Fragment {
 
     public void SearchCommand(String text) {
         if (text!="") {
-            mSocket.emit("search", text);
+            //socketClient.mSocket.emit("search", text);
+            socketClient.Search(text);
         }
     }
     //endregion
 
-    //region LoadFragment
-
-    private void loadFragment(Fragment fragment) {
-        // load fragment
-        FragmentTransaction transaction = getFragmentManager().beginTransaction();
-        transaction.replace(R.id.frame_container, fragment);
-        transaction.addToBackStack(null);
-        transaction.commit();
-    }
-
-    //endregion
 
     // TODO: Rename method, update argument and hook method into UI event
     public void onButtonPressed(Uri uri) {
@@ -270,6 +238,11 @@ public class SearchFragment extends Fragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
+
+        if (context instanceof Activity){
+            currentActivity=(Activity) context;
+        }
+
         if (context instanceof OnFragmentInteractionListener) {
             mListener = (OnFragmentInteractionListener) context;
         } else {

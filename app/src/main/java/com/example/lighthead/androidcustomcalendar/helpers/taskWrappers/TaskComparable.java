@@ -1,38 +1,37 @@
 package com.example.lighthead.androidcustomcalendar.helpers.taskWrappers;
 
 import com.example.lighthead.androidcustomcalendar.helpers.ConvertDateAndTime;
+import com.example.lighthead.androidcustomcalendar.models.Task;
 
 import java.util.Calendar;
 import java.util.Comparator;
 
-public class TaskComparable extends TaskDBWrapper {
+public class TaskComparable extends ServerTask {
 
     private Calendar DateTimeFrom = Calendar.getInstance();
     private Calendar DateTimeTo = Calendar.getInstance();
 
-    public TaskComparable(TaskDBWrapper task) {
+    public TaskComparable(ServerTask task) {
         super(task);
 
-        this.SetId(task.GetId());
-        this.SetServerTaskNumber(task.GetServerTaskNumber());
-
+        this.SetTaskNumber(task.GetTaskNumber());
 
         String taskStrDateFrom = task.GetDateFrom();
         String taskStrTimeFrom = task.GetTimeFrom();
 
-        if (!(taskStrDateFrom==null)) {
+        if ((taskStrDateFrom!=null)&&(taskStrDateFrom!="")) {
 
-            int taskIntYear = ConvertDateAndTime.GetYearFromStringDate(taskStrDateFrom);
-            int taskIntMonth = ConvertDateAndTime.GetMonthFromStringDate(taskStrDateFrom);
-            int taskIntDate = ConvertDateAndTime.GetDayFromStringDate(taskStrDateFrom);
+            int taskIntYear = ConvertDateAndTime.GetYearFromISOStringDate(taskStrDateFrom);
+            int taskIntMonth = ConvertDateAndTime.GetMonthFromISOStringDate(taskStrDateFrom);
+            int taskIntDate = ConvertDateAndTime.GetDayFromISOStringDate(taskStrDateFrom);
 
 
             int taskIntHours = 0;
             int taskIntMinutes = 0;
 
-            if (!(taskStrTimeFrom==null)) {
-                taskIntHours = ConvertDateAndTime.GetHourFromStringTime(taskStrTimeFrom);
-                taskIntMinutes = ConvertDateAndTime.GetMinutesFromStringTime(taskStrTimeFrom);
+            if ((taskStrTimeFrom!=null)&&(taskStrTimeFrom!="")) {
+                taskIntHours = ConvertDateAndTime.GetHourFromISOStringTime(taskStrTimeFrom);
+                taskIntMinutes = ConvertDateAndTime.GetMinutesFromISOStringTime(taskStrTimeFrom);
             }
 
 
@@ -43,19 +42,19 @@ public class TaskComparable extends TaskDBWrapper {
         String taskStrDateTo = task.GetDateTo();
         String taskStrTimeTo = task.GetTimeTo();
 
-        if (!(taskStrDateTo==null)) {
+        if ((taskStrDateTo!=null)&&(taskStrDateTo!="")) {
 
-            int taskIntYear = ConvertDateAndTime.GetYearFromStringDate(taskStrDateTo);
-            int taskIntMonth = ConvertDateAndTime.GetMonthFromStringDate(taskStrDateTo);
-            int taskIntDate = ConvertDateAndTime.GetDayFromStringDate(taskStrDateTo);
+            int taskIntYear = ConvertDateAndTime.GetYearFromISOStringDate(taskStrDateTo);
+            int taskIntMonth = ConvertDateAndTime.GetMonthFromISOStringDate(taskStrDateTo);
+            int taskIntDate = ConvertDateAndTime.GetDayFromISOStringDate(taskStrDateTo);
 
 
             int taskIntHours = 0;
             int taskIntMinutes = 0;
 
-            if (!(taskStrTimeTo==null)) {
-                taskIntHours = ConvertDateAndTime.GetHourFromStringTime(taskStrTimeTo);
-                taskIntMinutes = ConvertDateAndTime.GetMinutesFromStringTime(taskStrTimeTo);
+            if ((taskStrTimeTo!=null)&&(taskStrTimeTo!="")) {
+                taskIntHours = ConvertDateAndTime.GetHourFromISOStringTime(taskStrTimeTo);
+                taskIntMinutes = ConvertDateAndTime.GetMinutesFromISOStringTime(taskStrTimeTo);
             }
 
 

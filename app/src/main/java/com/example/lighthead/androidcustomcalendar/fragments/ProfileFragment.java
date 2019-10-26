@@ -1,5 +1,6 @@
 package com.example.lighthead.androidcustomcalendar.fragments;
 
+import android.app.Activity;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.content.Context;
@@ -7,6 +8,7 @@ import android.graphics.Paint;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -19,10 +21,14 @@ import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
+import com.example.lighthead.androidcustomcalendar.BadgesOperations;
+import com.example.lighthead.androidcustomcalendar.MappingElementsManager;
 import com.example.lighthead.androidcustomcalendar.SharedPreferencesOperations;
 import com.example.lighthead.androidcustomcalendar.helpers.ConvertDateAndTime;
 import com.example.lighthead.androidcustomcalendar.Global;
 import com.example.lighthead.androidcustomcalendar.R;
+import com.example.lighthead.androidcustomcalendar.helpers.FragmentOperations;
+import com.example.lighthead.androidcustomcalendar.helpers.communication.SocketClient;
 import com.github.nkzawa.emitter.Emitter;
 import com.github.nkzawa.socketio.client.IO;
 import com.github.nkzawa.socketio.client.Socket;
@@ -67,7 +73,7 @@ public class ProfileFragment extends Fragment {
     private TextView defaultUnavailableTimeFromTv;
     private TextView defaultUnavailableTimeToTv;
 	
-	private LinearLayout customUnavailableTimesList;
+	//private LinearLayout customUnavailableTimesList;
 
 	private ImageButton addCustomUnavailableInterval;
 	private ImageButton saveUnavailableIntervals;
@@ -77,35 +83,29 @@ public class ProfileFragment extends Fragment {
 
 	//endregion
 
+    private Activity currentActivity;
     private OnFragmentInteractionListener mListener;
-    JSONObject curUnavailableTimeData;
+    private JSONObject curUnavailableTimeData;
 
     //region Default unavailable time interval
     private String defaultUnavailableTimeFrom;
     private String defaultUnavailableTimeTo;
     //endregion
 
-    Global global = new Global();
+    private FragmentOperations fragmentOperations;
 
-    //region iSharedPrefsOperations
-    SharedPreferencesOperations spa = new SharedPreferencesOperations();
-    //endregion
+    private Global global = new Global();
+    private MappingElementsManager mappingElementsManager = new MappingElementsManager();
+    private SharedPreferencesOperations sp = new SharedPreferencesOperations();
+    private BadgesOperations badgesOperations = new BadgesOperations();
+    private SocketClient socketClient = new SocketClient();
+
+
 
     public ProfileFragment() {
         // Required empty public constructor
     }
 
-    //region Socket init
-    private Socket mSocket;
-    {
-        try {
-            mSocket = IO.socket("http://10.0.2.2:3000/");
-        } catch (URISyntaxException e) {
-            Log.d("MyLog", e.getMessage());
-            String err = e.getMessage();
-        }
-    }
-    //endregion
 
     /**
      * Use this factory method to create a new instance of
@@ -142,20 +142,12 @@ public class ProfileFragment extends Fragment {
         usernameTv = view.findViewById(R.id.username);
         usernameTv.setPaintFlags(usernameTv.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
 
-       // String login = ISharedPrefsOperations.GetLogin();
-        String login  = spa.GetLogin();
+        String login  = sp.GetLogin();
 
         usernameTv.setText(login);
 
         curUnavailableTimeData = new JSONObject();
 
-
-
-        //region Get user unavailable time with a socket
-        mSocket.connect();
-        mSocket.emit("unavailableTime", login);
-        mSocket.on("unavailableTime", onUnavailableTimeAnswer);
-        //endregion
 
         //region Find and init controls
 
@@ -176,17 +168,17 @@ public class ProfileFragment extends Fragment {
             }
         });
 
-		
-		customUnavailableTimesList = view.findViewById(R.id.customUnavailableTimesList);
-		addCustomUnavailableInterval = view.findViewById(R.id.addCustomUnavailableInterval);
-		addCustomUnavailableInterval.setOnClickListener(new View.OnClickListener() {
-			@Override
+
+       /* customUnavailableTimesList = view.findViewById(R.id.customUnavailableTimesList);
+        addCustomUnavailableInterval = view.findViewById(R.id.addCustomUnavailableInterval);
+        addCustomUnavailableInterval.setOnClickListener(new View.OnClickListener() {
+            @Override
             public void onClick(View v) {
                 addCustomUnavailableInterval(v);
-                      }
-		});
-		saveUnavailableIntervals = view.findViewById(R.id.saveUnavailableIntervals);
-		saveUnavailableIntervals.setOnClickListener(new View.OnClickListener() {
+            }
+        });*/
+        saveUnavailableIntervals = view.findViewById(R.id.saveUnavailableIntervals);
+        saveUnavailableIntervals.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 try {
@@ -207,6 +199,13 @@ public class ProfileFragment extends Fragment {
 
         //endregion
 
+        //region Get user unavailable time with a socket
+        socketClient.GetUserUnavailableTime(login);
+        socketClient.SetUnavailableTimeAnswer(onUnavailableTimeAnswer);
+        //endregion
+
+        fragmentOperations = new FragmentOperations(getFragmentManager());
+
         // Inflate the layout for this fragment
         return view;
     }
@@ -217,7 +216,8 @@ public class ProfileFragment extends Fragment {
     private Emitter.Listener onUnavailableTimeAnswer = new Emitter.Listener() {
         @Override
         public void call(final Object... args) {
-            getActivity().runOnUiThread(new Runnable() {
+
+            currentActivity.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
                     JSONObject data = (JSONObject) args[0];
@@ -249,8 +249,8 @@ public class ProfileFragment extends Fragment {
 						}
 
 
-                        JSONArray customIntervals = (JSONArray)data.getJSONArray("custom");
-                        for (int i = 0; i < data.length(); i++) {
+                        /*JSONArray customIntervals = (JSONArray)data.getJSONArray("custom");
+                        for (int i = 0; i < customIntervals.length(); i++) {
                             JSONObject jsonobject;
                             try {
                                 jsonobject = customIntervals.getJSONObject(i);
@@ -263,7 +263,7 @@ public class ProfileFragment extends Fragment {
                                 e.printStackTrace();
                             }
 
-                        }
+                        }*/
 
                     }
                     catch (JSONException e) {
@@ -282,72 +282,73 @@ public class ProfileFragment extends Fragment {
         JSONObject unavailableTime = new JSONObject();
         JSONObject defaultUnavailableTime = new JSONObject();
 
+        if ((defaultUnavailableTimeFromTv.getText().equals("Press to set"))||(defaultUnavailableTimeToTv.getText().equals("Press to set"))) {
+            Toast.makeText(getContext(), "Interval cannot be saved!" , Toast.LENGTH_LONG).show();
+            return;
+
+        }
+
         defaultUnavailableTime.put("from", defaultUnavailableTimeFrom);
         defaultUnavailableTime.put("to", defaultUnavailableTimeTo);
 
-        int customIntervalsAmount = customUnavailableTimesList.getChildCount();
         JSONArray customIntervals = new JSONArray();
+
+       /* int customIntervalsAmount = customUnavailableTimesList.getChildCount();
+
         for (int i=0;i<customIntervalsAmount;i++) {
             View curChild = customUnavailableTimesList.getChildAt(i);
 
             TextView dFrom = curChild.findViewById(R.id.customUnavailableDateFrom);
             String dFromText = dFrom.getText().toString();
-            int year = ConvertDateAndTime.GetYearFromStringDate(dFromText);
-            int month = ConvertDateAndTime.GetMonthFromStringDate(dFromText);
-            int day = ConvertDateAndTime.GetDayFromStringDate(dFromText);
-            String isoDateFrom = ConvertDateAndTime.ConvertToISOStringDate(year, month, day);
-
-
             TextView tFrom = curChild.findViewById(R.id.customUnavailableTimeFrom);
             String tFromText = tFrom.getText().toString();
-           // String isoDateTimeFrom = GetISODateTime(dFromText, tFromText);
-
             TextView dTo = curChild.findViewById(R.id.customUnavailableDateTo);
             String dToText = dTo.getText().toString();
-            year = ConvertDateAndTime.GetYearFromStringDate(dToText);
-            month = ConvertDateAndTime.GetMonthFromStringDate(dToText);
-            day = ConvertDateAndTime.GetDayFromStringDate(dToText);
-            String isoDateTo = ConvertDateAndTime.ConvertToISOStringDate(year, month, day);
-
-
             TextView tTo = curChild.findViewById(R.id.customUnavailableTimeTo);
             String tToText = tTo.getText().toString();
-          //  String isoDateTimeTo = GetISODateTime(dToText, tToText);
 
-            JSONObject customUnavailableTimeInterval = new JSONObject();
-           // customUnavailableTimeInterval.put("from", isoDateTimeFrom);
-           // customUnavailableTimeInterval.put("to", isoDateTimeTo);
-			customUnavailableTimeInterval.put("dateFrom", isoDateFrom);
-			customUnavailableTimeInterval.put("timeFrom", tFromText);
-			customUnavailableTimeInterval.put("dateTo", isoDateTo);
-			customUnavailableTimeInterval.put("timeTo", tToText);
-			
-            customIntervals.put(customUnavailableTimeInterval);
+            if ((!dFromText.equals("Set date"))&&(!tFromText.equals("Set time"))&&(!dToText.equals("Set date"))&&(!tToText.equals("Set time"))) {
 
-        }
+                int year = ConvertDateAndTime.GetYearFromStringDate(dFromText);
+                int month = ConvertDateAndTime.GetMonthFromStringDate(dFromText);
+                int day = ConvertDateAndTime.GetDayFromStringDate(dFromText);
+                String isoDateFrom = ConvertDateAndTime.ConvertToISOStringDate(year, month, day);
+
+                year = ConvertDateAndTime.GetYearFromStringDate(dToText);
+                month = ConvertDateAndTime.GetMonthFromStringDate(dToText);
+                day = ConvertDateAndTime.GetDayFromStringDate(dToText);
+                String isoDateTo = ConvertDateAndTime.ConvertToISOStringDate(year, month, day);
+
+
+                JSONObject customUnavailableTimeInterval = new JSONObject();
+                customUnavailableTimeInterval.put("dateFrom", isoDateFrom);
+                customUnavailableTimeInterval.put("timeFrom", tFromText);
+                customUnavailableTimeInterval.put("dateTo", isoDateTo);
+                customUnavailableTimeInterval.put("timeTo", tToText);
+
+                customIntervals.put(customUnavailableTimeInterval);
+            }
+
+        }*/
 
         unavailableTime.put("default", defaultUnavailableTime);
         unavailableTime.put("custom", customIntervals);
 
-        //String login = ISharedPrefsOperations.GetLogin();
-        String login = spa.GetLogin();
-        mSocket.emit("unavailableTime", login, unavailableTime);
+        String login = sp.GetLogin();
+        socketClient.SetUserUnavailableTime(login, unavailableTime);
 
-        Toast.makeText(getContext(), "Intervals have been saved!" , Toast.LENGTH_LONG).show();
+        Toast.makeText(getContext(), "Interval has been saved!" , Toast.LENGTH_LONG).show();
 
 
     }
 
 
-	
-	public void addCustomUnavailableInterval(View view) {
+	/*public void addCustomUnavailableInterval(View view) {
 
         addCustomUnavailableIntervalCommand(null, null);
-	}
+	}*/
 	
-	
-	
-	
+
 	
 	public void setUnavailableDate(View view){
 		curDateTv = (TextView) view;
@@ -364,13 +365,13 @@ public class ProfileFragment extends Fragment {
 		}
 		else {
 			year = ConvertDateAndTime.GetYearFromStringDate(curDate);
-			month = ConvertDateAndTime.GetMonthFromStringDate(curDate);
+			month = ConvertDateAndTime.GetMonthFromStringDate(curDate)-1;
 			day = ConvertDateAndTime.GetDayFromStringDate(curDate);
 		}
-        new DatePickerDialog(getContext(), unavailableDateListener, year, month-1, day).show();
+        new DatePickerDialog(getContext(), unavailableDateListener, year, month, day).show();
     }
 
-    DatePickerDialog.OnDateSetListener unavailableDateListener=new DatePickerDialog.OnDateSetListener() {
+    private DatePickerDialog.OnDateSetListener unavailableDateListener=new DatePickerDialog.OnDateSetListener() {
         public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
             curDateTv.setText(ConvertDateAndTime.ConvertToStringDate(year, monthOfYear+1, dayOfMonth));
 
@@ -396,7 +397,7 @@ public class ProfileFragment extends Fragment {
 		new TimePickerDialog(getContext(), unavailableTimeListener, hours, minutes, true).show();
     }
 
-    TimePickerDialog.OnTimeSetListener unavailableTimeListener = new TimePickerDialog.OnTimeSetListener() {
+    private TimePickerDialog.OnTimeSetListener unavailableTimeListener = new TimePickerDialog.OnTimeSetListener() {
         @Override
         public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
             curTimeTv.setText(ConvertDateAndTime.ConvertToISOStringTime(hourOfDay, minute));
@@ -440,24 +441,33 @@ public class ProfileFragment extends Fragment {
 	
 
     public void logout(View view) {
-       // ISharedPrefsOperations.ClearSharedPreferences();
-        spa.ClearSharedPreferences();
+        badgesOperations.ClearMappingsAmount();
+        sp.ClearSharedPreferences();
+
+       // global.ClearMappingElements();
+        mappingElementsManager.ClearMappingElements();
+
+        String login  = sp.GetLogin();
+       // socketClient.mSocket.off();
+        socketClient.OffListeners();
+      //  socketClient.mSocket.disconnect();
+        socketClient.Disconnect();
 
         Fragment fragment = new LoginFragment();
-      //  ((LoginFragment) fragment).SetISharedPrefsOperations(ISharedPrefsOperations);
+        global.SetCurSchedFragment(fragment);
         global.SetCurSearchFragment(fragment);
         global.SetCurMappingsFragment(fragment);
         global.SetCurNotificationsFragment(fragment);
         global.SetCurSettingsFragment(fragment);
 
-        loadFragment(fragment);
+        fragmentOperations.LoadFragment(fragment);
     }
 
     //endregion
 
     //region Commands
 
-    public void addCustomUnavailableIntervalCommand(String dateTimeFrom, String dateTimeTo) {
+  /*  public void addCustomUnavailableIntervalCommand(String dateTimeFrom, String dateTimeTo) {
 
         LayoutInflater layoutInflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         final View customIntervalView = layoutInflater.inflate(R.layout.singleunavailablecustomtimelayout, null);
@@ -494,7 +504,8 @@ public class ProfileFragment extends Fragment {
             }
         });
 
-        ImageButton removeCustomUnavailableInterval = customIntervalView.findViewById(R.id.removeCustomUnavailableInterval);
+
+        TextView removeCustomUnavailableInterval = customIntervalView.findViewById(R.id.removeCustomUnavailableInterval);
         removeCustomUnavailableInterval.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -560,21 +571,10 @@ public class ProfileFragment extends Fragment {
 
         customUnavailableTimesList.addView(customIntervalView);
 
-    }
+    }*/
 
     //endregion
 
-    //region LoadFragment
-
-    private void loadFragment(Fragment fragment) {
-        // load fragment
-        FragmentTransaction transaction = getFragmentManager().beginTransaction();
-        transaction.replace(R.id.frame_container, fragment);
-        transaction.addToBackStack(null);
-        transaction.commit();
-    }
-
-    //endregion
 
     // TODO: Rename method, update argument and hook method into UI event
     public void onButtonPressed(Uri uri) {
@@ -583,9 +583,18 @@ public class ProfileFragment extends Fragment {
         }
     }
 
+
+
+
+
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
+
+        if (context instanceof Activity){
+            currentActivity=(Activity) context;
+        }
+
         if (context instanceof OnFragmentInteractionListener) {
             mListener = (OnFragmentInteractionListener) context;
         } else {
@@ -593,6 +602,8 @@ public class ProfileFragment extends Fragment {
                     + " must implement OnFragmentInteractionListener");
         }
     }
+
+
 
     @Override
     public void onDetach() {

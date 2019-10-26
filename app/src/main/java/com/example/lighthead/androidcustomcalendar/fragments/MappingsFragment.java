@@ -1,17 +1,19 @@
 package com.example.lighthead.androidcustomcalendar.fragments;
 
+import android.app.Activity;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.DatePicker;
+import android.widget.GridView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -19,24 +21,25 @@ import android.widget.TimePicker;
 import android.widget.Toast;
 
 import com.example.lighthead.androidcustomcalendar.BadgesOperations;
+import com.example.lighthead.androidcustomcalendar.MappingElementsManager;
+import com.example.lighthead.androidcustomcalendar.SharedPreferencesOperations;
+import com.example.lighthead.androidcustomcalendar.adapters.SavedMappingsAdapter;
 import com.example.lighthead.androidcustomcalendar.helpers.ConvertDateAndTime;
 import com.example.lighthead.androidcustomcalendar.Global;
+import com.example.lighthead.androidcustomcalendar.helpers.FragmentOperations;
+import com.example.lighthead.androidcustomcalendar.helpers.communication.SocketClient;
+import com.example.lighthead.androidcustomcalendar.helpers.mapping.SavedMapping;
 import com.example.lighthead.androidcustomcalendar.interfaces.IMappingElementOperations;
-import com.example.lighthead.androidcustomcalendar.helpers.mapping.MappingResultElement;
-import com.example.lighthead.androidcustomcalendar.helpers.mapping.MappingVisibleResultElement;
 import com.example.lighthead.androidcustomcalendar.R;
 
 import com.example.lighthead.androidcustomcalendar.adapters.MappingElementAdapter;
-import com.example.lighthead.androidcustomcalendar.adapters.MappingResultAdapter;
+
 import com.github.nkzawa.emitter.Emitter;
-import com.github.nkzawa.socketio.client.IO;
-import com.github.nkzawa.socketio.client.Socket;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Calendar;
 
@@ -63,12 +66,13 @@ public class MappingsFragment extends Fragment {
 
     private OnFragmentInteractionListener mListener;
 
-    private Global global = new Global();
+    private Activity currentActivity;
 
-    Bundle mappingsParamsBundle;
+    private Bundle mappingsParamsBundle;
+    private JSONArray curMappingResultsData = new JSONArray();
 
-    Calendar dateAndTimeFrom = Calendar.getInstance();
-    Calendar dateAndTimeTo = Calendar.getInstance();
+    private Calendar dateAndTimeFrom = Calendar.getInstance();
+    private Calendar dateAndTimeTo = Calendar.getInstance();
 
     //region Mapping intervals filling flags
     boolean isMapDateFromDefined = false;
@@ -76,25 +80,31 @@ public class MappingsFragment extends Fragment {
     boolean isMapDateToDefined = false;
     boolean isMapTimeToDefined = false;
     //endregion
-
     //region Controls
-    TextView mappingDateFrom;
-    TextView mappingTimeFrom;
-    TextView mappingDateTo;
-    TextView mappingTimeTo;
-    LinearLayout mapPanelLL;
-    ListView mapElementsLv;
-    Button showMappingPanelButton;
+    private TextView mappingDateFrom;
+    private TextView mappingTimeFrom;
+    private TextView mappingDateTo;
+    private TextView mappingTimeTo;
+    private LinearLayout mapPanelLL;
+    private ListView savedMappingsLv;
+    private GridView mapElementsGv;
     //endregion
+
+    private Global global = new Global();
+    private MappingElementsManager mappingElementsManager = new MappingElementsManager();
+    private BadgesOperations badgesOperations = new BadgesOperations();
+    private SharedPreferencesOperations sp = new SharedPreferencesOperations();
+    private SocketClient socketClient = new SocketClient();
+
+    private View view;
+
+
 
     public MappingsFragment() {
         // Required empty public constructor
     }
 
 
-    //region iBadgesOperations
-   BadgesOperations badgesOperations = new BadgesOperations();
-    //endregion
 
     /**
      * Use this factory method to create a new instance of
@@ -114,17 +124,8 @@ public class MappingsFragment extends Fragment {
         return fragment;
     }
 
-    //region Socket init
-    private Socket mSocket;
-    {
-        try {
-            mSocket = IO.socket("http://10.0.2.2:3000/");
-        } catch (URISyntaxException e) {
-            Log.d("MyLog", e.getMessage());
-            String err = e.getMessage();
-        }
-    }
-    //endregion
+
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -139,10 +140,9 @@ public class MappingsFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        final View view = inflater.inflate(R.layout.fragment_mappings, container, false);
+        view = inflater.inflate(R.layout.fragment_mappings, container, false);
 
         //region Find and init controls
-
         mappingDateFrom = view.findViewById(R.id.mappingDateFrom);
         mappingDateFrom.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -192,36 +192,34 @@ public class MappingsFragment extends Fragment {
                 mappingTimeTo.setText(strTimeTo);
         }
 
+        mapElementsGv = view.findViewById(R.id.mapElementsGv);
+        mapElementsGv.setNumColumns(GridView.AUTO_FIT);
+        mapElementsGv.setHorizontalSpacing(5);
+        mapElementsGv.setVerticalSpacing(5);
 
-        final ArrayList<String> mapElements = global.GetMappingElements();
-        UpdateMapPanelState(view, mapElements);
+        InitMappingElements();
 
-        mapElementsLv = view.findViewById(R.id.mapElements);
-        final MappingElementAdapter mapAdapter = new MappingElementAdapter(getContext(), R.layout.singlemappingelement, mapElements);
-        IMappingElementOperations iMappingElementOperations = new IMappingElementOperations() {
+        savedMappingsLv = view.findViewById(R.id.savedMappings);
+        AdapterView.OnItemClickListener listener = new AdapterView.OnItemClickListener() {
             @Override
-            public void RemoveMappingElement(String element) {
-                ArrayList<String> mappingElements = global.GetMappingElements();
+            public void onItemClick(AdapterView<?> parent, View itemView, int position, long id) {
+                SavedMapping curSavedMapping = (SavedMapping)parent.getItemAtPosition(position);
+                ArrayList<String> participants = curSavedMapping.GetParticipants();
 
-                if (mappingElements.contains(element)) {
+                SetDateFrom(curSavedMapping.GetDateTimeFrom());
+                SetDateTo(curSavedMapping.GetDateTimeTo());
+                SetTimeFrom(curSavedMapping.GetDateTimeFrom());
+                SetTimeTo(curSavedMapping.GetDateTimeTo());
 
-                    mappingElements.remove(element);
-                    int amount = mappingElements.size();
-                    if (amount==0)
-                        badgesOperations.ClearMappingsAmount();
-                    else
-                        badgesOperations.SetMappingsAmount(amount);
-                }
-                mapAdapter.notifyDataSetChanged();
-                UpdateMapPanelState(view, mapElements);
+                mappingElementsManager.SetMappingsElements(participants);
+                badgesOperations.SetMappingsAmount(participants.size());
+
+                UpdateMapPanelState(view, participants);
+                InitMappingElements();
+
             }
         };
-
-        mapAdapter.SetIMappingElementOperations(iMappingElementOperations);
-
-
-        mapElementsLv.setAdapter(mapAdapter);
-
+        savedMappingsLv.setOnItemClickListener(listener);
 
         Button runMappingButton = view.findViewById(R.id.runMappingButton);
         runMappingButton.setOnClickListener(new View.OnClickListener() {
@@ -230,115 +228,70 @@ public class MappingsFragment extends Fragment {
                 RunMapping(v);
             }
         });
-
-        showMappingPanelButton = view.findViewById(R.id.showMappingPanelButton);
-        showMappingPanelButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                ShowMappingPanel(v);
-            }
-        });
-        showMappingPanelButton.setVisibility(View.GONE);
-
         //endregion
 
-        mSocket.on("mapping", onMappingAnswer);
-        mSocket.connect();
+        socketClient.SetSavedMappingsListener(onSearchesAnswer);
+
+        String username = sp.GetLogin();
+        socketClient.GetSavedMappings(username);
 
 
         return view;
     }
 
-    //region Mapping results listener
 
-    private Emitter.Listener onMappingAnswer = new Emitter.Listener() {
+
+    //region Searches results listener
+    private Emitter.Listener onSearchesAnswer = new Emitter.Listener() {
         @Override
         public void call(final Object... args) {
-            getActivity().runOnUiThread(new Runnable() {
+            currentActivity.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
                     JSONArray data = (JSONArray) args[0];
 
-                    ArrayList<MappingResultElement> mappingResults = new ArrayList<>();
+                    ArrayList<SavedMapping> savedMappingsResults = new ArrayList<>();
+
                     for (int i = 0; i < data.length(); i++) {
                         JSONObject jsonobject;
+
                         try {
-                            MappingResultElement mappingResultElement = new MappingResultElement();
-
                             jsonobject = data.getJSONObject(i);
-                            String from = jsonobject.getString("from");
+
+                            String from = jsonobject.getString("dateTimeFrom");
                             Calendar dtFrom = ConvertDateAndTime.GetCalendarDateTimeFromISOString(from);
-                            String to = jsonobject.getString("to");
+                            String to = jsonobject.getString("dateTimeTo");
                             Calendar dtTo = ConvertDateAndTime.GetCalendarDateTimeFromISOString(to);
-                            mappingResultElement.SetDateTimeFrom(dtFrom);
-                            mappingResultElement.SetDateTimeTo(dtTo);
 
-
-                            int amount = jsonobject.getInt("amount");
-                            mappingResultElement.SetAmount(amount);
-
-                            JSONArray array = jsonobject.getJSONArray("freeUsers");
+                            JSONArray array = jsonobject.getJSONArray("participantsList");
                             int size = array.length();
-                            ArrayList<String> users = new ArrayList<>();
+                            ArrayList<String> patricipants = new ArrayList<>();
                             for (int j=0;j<size;j++) {
-                                String user = (String) array.get(j);
-                                users.add(user);
+                                String participant = (String) array.get(j);
+                                patricipants.add(participant);
                             }
-                            mappingResultElement.SetUserList(users);
-
-                            mappingResults.add(mappingResultElement);
 
 
 
-                        } catch (JSONException e) {
+                            savedMappingsResults.add(new SavedMapping(dtFrom, dtTo, patricipants));
+                        }
+
+                        catch (JSONException e) {
                             e.printStackTrace();
                         }
 
-
-
                     }
 
-
-                    ArrayList<MappingVisibleResultElement> mappingVisibleResultElements = new ArrayList<>();
-
-                    for(int k=global.GetMappingElements().size();k>0;k--) {
-                        ArrayList<MappingResultElement> list = new ArrayList<MappingResultElement>();
-                        for (MappingResultElement element:
-                             mappingResults) {
-                            if (element.GetAmount()==k){
-                                list.add(element);
-                            }
-
-                        }
-
-                        if (list.size()>0) {
-
-                            MappingVisibleResultElement mappingVisibleResultElement = new MappingVisibleResultElement();
-                            mappingVisibleResultElement.SetAmount(k);
-                            mappingVisibleResultElement.SetIntervalsAndUsers(list);
-
-                            mappingVisibleResultElements.add(mappingVisibleResultElement);
-                        }
-                    }
-
-                    ListView mappingResultsLv = getView().findViewById(R.id.mappingResults);
-                    MappingResultAdapter adapter = new MappingResultAdapter(getContext(), R.layout.singlemappingresultlayout, mappingVisibleResultElements);
-                    mappingResultsLv.setAdapter(adapter);
-                   // Collections.sort(mappingResults, MappingResultElement.DateTimeFromComparator);
-                    HideMappingPanelCommand();
+                    SavedMappingsAdapter adapter = new SavedMappingsAdapter(getContext(), R.layout.singlesavedmappinglayout, savedMappingsResults);
+                    savedMappingsLv.setAdapter(adapter);
                 }
+
             });
         }
     };
-
     //endregion
 
     //region Listeners
-
-    private void ShowMappingPanel(View view) {
-        ShowMappingPanelCommand();
-    }
-
 
     private void UpdateMapPanelState(View view, ArrayList<String> mapElements) {
         mapPanelLL = view.findViewById(R.id.mapPanel);
@@ -441,7 +394,8 @@ public class MappingsFragment extends Fragment {
             String mapTimeTo = mappingTimeTo.getText().toString();
             String isoMapTimeTo = ConvertDateAndTime.ConvertStringTimeToISO(mapTimeTo);
 
-            ArrayList<String> mappingElements = global.GetMappingElements();
+           // ArrayList<String> mappingElements = global.GetMappingElements();
+            ArrayList<String> mappingElements = mappingElementsManager.GetMappingElements();
             JSONArray jsonMappingElements = new JSONArray();
             for (String mElement:mappingElements
             ) {
@@ -460,7 +414,17 @@ public class MappingsFragment extends Fragment {
             }
 
 
-            mSocket.emit("mapping", jsonMappingData);
+
+
+            MappingResultsFragment fragment = new MappingResultsFragment();
+            global.SetCurMappingsFragment(fragment);
+
+            Bundle bundle = new Bundle();
+            bundle.putString("jsonMappingData", jsonMappingData.toString());
+            fragment.setArguments(bundle);
+
+            FragmentOperations fragmentOperations = new FragmentOperations(getFragmentManager());
+            fragmentOperations.LoadFragment(fragment);
         }
     }
 
@@ -468,17 +432,33 @@ public class MappingsFragment extends Fragment {
 
     //region Commands
 
-    private void HideMappingPanelCommand() {
-        mapPanelLL.setVisibility(View.GONE);
-        mapElementsLv.setVisibility(View.GONE);
-        showMappingPanelButton.setVisibility(View.VISIBLE);
-    }
+    private void InitMappingElements() {
+        final ArrayList<String> mapElements = mappingElementsManager.GetMappingElements();
+        UpdateMapPanelState(view, mapElements);
 
-    private void ShowMappingPanelCommand() {
-        mapPanelLL.setVisibility(View.VISIBLE);
-        mapElementsLv.setVisibility(View.VISIBLE);
-        showMappingPanelButton.setVisibility(View.GONE);
+        final MappingElementAdapter mapAdapter = new MappingElementAdapter(getContext(), R.layout.singlemappingelement, mapElements);
+        IMappingElementOperations iMappingElementOperations = new IMappingElementOperations() {
+            @Override
+            public void RemoveMappingElement(String element) {
 
+                if (mapElements.contains(element)) {
+
+                    mapElements.remove(element);
+                    int amount = mapElements.size();
+                    if (amount==0)
+                        badgesOperations.ClearMappingsAmount();
+                    else
+                        badgesOperations.SetMappingsAmount(amount);
+                }
+                mapAdapter.notifyDataSetChanged();
+                UpdateMapPanelState(view, mapElements);
+
+            }
+        };
+
+        mapAdapter.SetIMappingElementOperations(iMappingElementOperations);
+
+        mapElementsGv.setAdapter(mapAdapter);
     }
 
     private void SetDateFrom(Calendar fullDate) {
@@ -569,6 +549,11 @@ public class MappingsFragment extends Fragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
+
+        if (context instanceof Activity){
+            currentActivity=(Activity) context;
+        }
+
         if (context instanceof OnFragmentInteractionListener) {
             mListener = (OnFragmentInteractionListener) context;
         } else {
@@ -581,6 +566,17 @@ public class MappingsFragment extends Fragment {
     public void onDetach() {
         super.onDetach();
         mListener = null;
+    }
+
+    @Override
+    public void onResume(){
+        super.onResume();
+
+        curMappingResultsData = new JSONArray();
+
+        String username = sp.GetLogin();
+        socketClient.GetSavedMappings(username);
+
     }
 
     /**

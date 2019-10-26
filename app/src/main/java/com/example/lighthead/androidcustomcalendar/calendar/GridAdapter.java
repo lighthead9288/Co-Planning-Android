@@ -3,8 +3,8 @@ package com.example.lighthead.androidcustomcalendar.calendar;
 import android.content.Context;
 
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
-import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
@@ -19,9 +19,12 @@ import com.example.lighthead.androidcustomcalendar.fragments.TaskListFragment;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+
 public class GridAdapter extends ArrayAdapter implements TaskListFragment.OnFragmentInteractionListener {
-    private static final String TAG = GridAdapter.class.getSimpleName();
     private LayoutInflater mInflater;
     private List<Date> monthlyDates;
     private Calendar currentDate;
@@ -48,12 +51,26 @@ public class GridAdapter extends ArrayAdapter implements TaskListFragment.OnFrag
         final int dayValue = dateCal.get(Calendar.DAY_OF_MONTH);
         final int displayMonth = dateCal.get(Calendar.MONTH) + 1;
         final int displayYear = dateCal.get(Calendar.YEAR);
+
         final int currentMonth = currentDate.get(Calendar.MONTH) + 1;
-        int currentYear = currentDate.get(Calendar.YEAR);        View view = convertView;
+        int currentYear = currentDate.get(Calendar.YEAR);
+
+        Calendar today = new GregorianCalendar();
+        int todayYear = today.get(Calendar.YEAR);
+        int todayMonth = today.get(Calendar.MONTH) + 1;
+        int todayDate = today.get(Calendar.DAY_OF_MONTH);
+
+        View view = convertView;
+
         if (view == null) {
             view = mInflater.inflate(R.layout.single_cell_layout, parent, false);
         }
-        if (displayMonth == currentMonth && displayYear == currentYear) {
+
+        if (displayMonth == todayMonth && displayYear == todayYear && dayValue == todayDate) {
+            view.setBackgroundColor(Color.parseColor("#a61b03"));
+        }
+
+        else if (displayMonth == currentMonth && displayYear == currentYear) {
             view.setBackgroundColor(Color.parseColor("#FF5733"));
 
         } else {
@@ -61,30 +78,34 @@ public class GridAdapter extends ArrayAdapter implements TaskListFragment.OnFrag
 
         }
 
+
+
         view.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
-               /* Intent intent = new Intent(getContext().getApplicationContext(), TaskListView.class);
+                Iterator iterator = selectedDays.entrySet().iterator();
+                while (iterator.hasNext()) {
+                    Map.Entry pair = (Map.Entry) iterator.next();
+                    View curView = (View) pair.getKey();
+                    int curColor = (int) pair.getValue();
+
+                    curView.setBackgroundColor(curColor);
+                }
+
+                ColorDrawable viewColor = (ColorDrawable) v.getBackground();
+                int prevBackgroundColor = viewColor.getColor();
+
+                v.setBackgroundColor(Color.parseColor("#8c4c22"));
+
 
                 Calendar calendar = new GregorianCalendar();
                 calendar.set(displayYear, displayMonth-1, dayValue);
 
-                intent.putExtra("TaskListOption", "Interval");
-                intent.putExtra("SelectedDateFrom", calendar);
-                intent.putExtra("SelectedDateTo", calendar);
-                getContext().startActivity(intent);*/
+                if (ICalendar!=null)
+                    ICalendar.OnClick(calendar);
 
-
-                Calendar calendar = new GregorianCalendar();
-                calendar.set(displayYear, displayMonth-1, dayValue);
-
-                Bundle bundle = new Bundle();
-                bundle.putString("TaskListOption", "Interval");
-                bundle.putSerializable("SelectedDateFrom", calendar);
-                bundle.putSerializable("SelectedDateTo", calendar);
-
-                ICalendar.OnClick(bundle);
+                selectedDays.put(v, prevBackgroundColor);
 
             }
         });
@@ -95,6 +116,8 @@ public class GridAdapter extends ArrayAdapter implements TaskListFragment.OnFrag
 
         return view;
     }
+
+    private static HashMap<View, Integer> selectedDays = new HashMap<>();
 
 
 

@@ -6,50 +6,41 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.Button;
 import android.widget.DatePicker;
+import android.widget.ExpandableListAdapter;
+import android.widget.ExpandableListView;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.lighthead.androidcustomcalendar.SharedPreferencesOperations;
+import com.example.lighthead.androidcustomcalendar.adapters.ExpandableTaskListAdapter;
+import com.example.lighthead.androidcustomcalendar.calendar.CalendarCustomView;
+import com.example.lighthead.androidcustomcalendar.calendar.ICalendarCellClick;
 import com.example.lighthead.androidcustomcalendar.helpers.ConvertDateAndTime;
 import com.example.lighthead.androidcustomcalendar.Global;
-import com.example.lighthead.androidcustomcalendar.interfaces.ICoPlanningAPI;
+import com.example.lighthead.androidcustomcalendar.helpers.FragmentOperations;
+import com.example.lighthead.androidcustomcalendar.helpers.GroupedTasksCollection;
+import com.example.lighthead.androidcustomcalendar.helpers.communication.ServerTaskManager;
 import com.example.lighthead.androidcustomcalendar.interfaces.ITaskListFragment;
 import com.example.lighthead.androidcustomcalendar.R;
-import com.example.lighthead.androidcustomcalendar.helpers.communication.RetrofitClient;
 import com.example.lighthead.androidcustomcalendar.helpers.taskWrappers.ServerTask;
-import com.example.lighthead.androidcustomcalendar.helpers.SetTaskListParams;
 import com.example.lighthead.androidcustomcalendar.helpers.taskWrappers.TaskComparable;
-import com.example.lighthead.androidcustomcalendar.helpers.taskWrappers.TaskDBWrapper;
-import com.example.lighthead.androidcustomcalendar.helpers.db.TaskManager;
-import com.example.lighthead.androidcustomcalendar.models.User;
-import com.example.lighthead.androidcustomcalendar.adapters.TaskAdapter;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.example.lighthead.androidcustomcalendar.interfaces.ITaskListOperations;
 
-import org.json.JSONException;
 
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.GregorianCalendar;
+import java.util.List;
 
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.Retrofit;
 
 
 /**
@@ -73,7 +64,6 @@ public class TaskListFragment extends Fragment implements ITaskListFragment {
     private OnFragmentInteractionListener mListener;
 
     public View view;
-    Global global = new Global();
 
     private final String TASK_LIST_OPTION = "TaskListOption";
 
@@ -84,7 +74,7 @@ public class TaskListFragment extends Fragment implements ITaskListFragment {
     private final String TASK_LIST_TODAY = "Today";
     private final String TASK_LIST_THIS_WEEK = "ThisWeek";
 
-    Bundle taskListParamsBundle;
+    Bundle taskListParamsBundle = new Bundle();
     //choosen interval in radiogroup
     String option;
     //Date interval parameters visibility
@@ -95,8 +85,9 @@ public class TaskListFragment extends Fragment implements ITaskListFragment {
     private TextView dateFrom;
     private TextView dateTo;
     protected ListView taskList;
+    protected ExpandableListView expandableTaskList;
 
-    private TextView taskListHeader;
+  //  private TextView taskListHeader;
     private RadioGroup readyPeriodsRadioGroup;
     private RadioButton setInterval;
     private RadioButton today;
@@ -105,17 +96,19 @@ public class TaskListFragment extends Fragment implements ITaskListFragment {
     private LinearLayout dateFromLinearLayout;
     private LinearLayout dateToLinearLayout;
 
-    private Button paramsEnableButton;
 
     protected ImageButton addTaskButton;
     protected ImageButton editTaskButton;
-    protected ImageButton copyTaskButton;
-    protected ImageButton carryTaskButton;
+   // protected ImageButton copyTaskButton;
+   // protected ImageButton carryTaskButton;
     protected ImageButton deleteTaskButton;
-    protected ImageButton uploadTasksButton;
-    protected ImageButton downloadTasksButton;
-    //endregion
+  //  protected ImageButton uploadTasksButton;
+  //  protected ImageButton downloadTasksButton;
+    protected ImageButton filterButton;
+    protected ImageButton calendarButton;
 
+    private CalendarCustomView calendarCustomView;
+    //endregion
 
     //region Dates in textboxes
     Calendar dateAndTimeFrom=Calendar.getInstance();
@@ -127,16 +120,16 @@ public class TaskListFragment extends Fragment implements ITaskListFragment {
     Calendar curDateAndTimeTo = Calendar.getInstance();
     //endregion
 
+    private ServerTaskManager serverTaskManager;
+    protected ExpandableTaskListAdapter expandableTaskAdapter;
 
-    private TaskManager taskManager;
-    protected TaskAdapter taskAdapter;
 
-    //region To upload/download task list on server
-    private Call<User> loginCall;
-    private Call<User> setTaskListCall;
-    //endregion
+    private String login;
+    private String password;
 
-   SharedPreferencesOperations spa = new SharedPreferencesOperations();
+    private SharedPreferencesOperations spa = new SharedPreferencesOperations();
+    public Global global = new Global();
+    private FragmentOperations fragmentOperations;
 
 
     public TaskListFragment() {
@@ -171,26 +164,25 @@ public class TaskListFragment extends Fragment implements ITaskListFragment {
     }
 
     @Override
+    public View GetTaskListView(LayoutInflater inflater, ViewGroup container) {
+        View resView = inflater.inflate(R.layout.fragment_task_list, container, false);
+        return resView;
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        view = inflater.inflate(R.layout.fragment_task_list, container, false);
+        view = GetTaskListView(inflater, container);
 
         //region Find and init controls
-        taskListHeader = view.findViewById(R.id.taskListHeader);
 
         readyPeriodsRadioGroup = view.findViewById(R.id.readyPeriodsRadioGroup);
 
         dateFromLinearLayout = view.findViewById(R.id.dateFromLinearLayout);
         dateToLinearLayout = view.findViewById(R.id.dateToLinearLayout);
 
-        paramsEnableButton = view.findViewById(R.id.paramsEnableButton);
-        paramsEnableButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                ParamsEnable(v);
-            }
-        });
+
         addTaskButton = view.findViewById(R.id.addTask);
         addTaskButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -205,20 +197,7 @@ public class TaskListFragment extends Fragment implements ITaskListFragment {
                 EditTask(v);
             }
         });
-        copyTaskButton = view.findViewById(R.id.copyTask);
-        copyTaskButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                CopyTask(v);
-            }
-        });
-        carryTaskButton = view.findViewById(R.id.carryTask);
-        carryTaskButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                CarryTask(v);
-            }
-        });
+
         deleteTaskButton = view.findViewById(R.id.deleteTask);
         deleteTaskButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -226,18 +205,20 @@ public class TaskListFragment extends Fragment implements ITaskListFragment {
                 DeleteTask(v);
             }
         });
-        uploadTasksButton = view.findViewById(R.id.uploadTaskList);
-        uploadTasksButton.setOnClickListener(new View.OnClickListener() {
+
+        filterButton = view.findViewById(R.id.filterButton);
+        filterButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                UploadTaskList(v);
+                FilterSelect(v);
             }
         });
-        downloadTasksButton = view.findViewById(R.id.downloadTaskList);
-        downloadTasksButton.setOnClickListener(new View.OnClickListener() {
+
+        calendarButton = view.findViewById(R.id.calendarButton);
+        calendarButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                DownloadTaskList(v);
+                CalendarSelect(v);
             }
         });
 
@@ -278,25 +259,61 @@ public class TaskListFragment extends Fragment implements ITaskListFragment {
             }
         });
 
+        calendarCustomView = view.findViewById(R.id.calendarView);
+
+        ICalendarCellClick iCalendarCellClick = new ICalendarCellClick() {
+            @Override
+            public void OnClick(Calendar calendar) {
+
+                SetIntervalCommand(calendar, calendar);
+                HideParamsCommand();
+                HideCalendarCommand();
+
+
+            }
+        };
+
+        calendarCustomView.SetICalendarCellClick(iCalendarCellClick);
+
         //endregion
 
         //'This week' option by default...
         option = TASK_LIST_THIS_WEEK;
-        taskListParamsBundle = getArguments();
+        Bundle inputArguments = getArguments();
 
-        if (taskListParamsBundle!=null){
+        if (inputArguments!=null){
+            taskListParamsBundle = inputArguments;
             option = taskListParamsBundle.getString(TASK_LIST_OPTION);
+        }
 
-            login = spa.GetLogin();
-            password = spa.GetPassword();
+        login = spa.GetLogin();
+        password = spa.GetPassword();
 
-            if ((login!="")&&(password!="")&&(login!=null)&&(password!=null)) {
-                uploadTasksButton.setVisibility(View.VISIBLE);
-                downloadTasksButton.setVisibility(View.VISIBLE);
+        ITaskListOperations iTaskListOperations = new ITaskListOperations() {
+            @Override
+            public void OnGetTasks(ArrayList<ServerTask> tasksFromServer) {
+                ArrayList<TaskComparable> taskComparables = new ArrayList<>();
+                for (ServerTask task:tasksFromServer
+                ) {
+                    TaskComparable taskComparable = new TaskComparable(task);
+                    taskComparables.add(taskComparable);
+                }
+                Collections.sort(taskComparables, TaskComparable.DateTimeFromComparator);
 
+               SetExpandableListAdapter(getContext(), R.layout.singletasklayout, taskComparables, login);
 
             }
-        }
+
+            @Override
+            public void OnDeleteTasks() {
+                UpdateTaskList(curDateAndTimeFrom, curDateAndTimeTo);
+                HideParamsCommand();
+                HideCalendarCommand();
+            }
+        };
+
+        serverTaskManager = new ServerTaskManager(iTaskListOperations);
+
 
         boolean isInterval = (option.equals(TASK_LIST_INTERVAL));
         boolean isToday = (option.equals(TASK_LIST_TODAY));
@@ -316,24 +333,49 @@ public class TaskListFragment extends Fragment implements ITaskListFragment {
             SetThisWeekCommand();
 
         }
+        SetTaskListView();
+        InitButtons();
 
-        //region Fix selected tasks in shown task list
-        AdapterView.OnItemClickListener itemClickListener = new AdapterView.OnItemClickListener() {
+        fragmentOperations = new FragmentOperations(getFragmentManager());
+
+        filterButton.setImageResource(R.drawable.filter);
+        calendarButton.setImageResource(R.drawable.calendar);
+
+        HideParamsCommand();
+        HideCalendarCommand();
+
+        return view;
+    }
+
+    //region Commands
+    @Override
+    public void SetTaskListView() {
+        expandableTaskList = view.findViewById(R.id.expandableTaskList);
+        expandableTaskList.setOnGroupClickListener(new ExpandableListView.OnGroupClickListener() {
             @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            public boolean onGroupClick(ExpandableListView parent, View v, int groupPosition, long id) {
+                return false;
+            }
+        });
 
+        expandableTaskList.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
+            @Override
+            public boolean onChildClick(ExpandableListView expandableListView, View view,
+                                        int groupPosition, int childPosition, long l) {
                 try {
-                    TaskComparable selectedTask = (TaskComparable)parent.getItemAtPosition(position);
+                    ExpandableListAdapter adapter = expandableListView.getExpandableListAdapter();
 
-                    if (!taskAdapter.selectedTasks.contains(selectedTask))
+                    TaskComparable selectedTask = (TaskComparable)adapter.getChild(groupPosition,childPosition);
+
+                    if (!expandableTaskAdapter.selectedTasks.contains(selectedTask))
                     {
-                        taskAdapter.selectedTasks.add(selectedTask);
+                        expandableTaskAdapter.selectedTasks.add(selectedTask);
                         view.setBackgroundColor(Color.GRAY);
 
                     }
                     else
                     {
-                        taskAdapter.selectedTasks.remove(selectedTask);
+                        expandableTaskAdapter.selectedTasks.remove(selectedTask);
                         view.setBackgroundColor(Color.WHITE);
 
                     }
@@ -341,23 +383,75 @@ public class TaskListFragment extends Fragment implements ITaskListFragment {
                     InitButtons();
                 }
                 catch(Exception e) {
-                    return;
+                    return false;
                 }
 
+
+                return false;
             }
-        };
-        //endregion
-
-        taskList.setOnItemClickListener(itemClickListener);
-
-        InitButtons();
-
-        return view;
+        });
     }
 
 
+    private void SetExpandableListAdapter(Context context, int resource, List<TaskComparable> tasks, String user) {
 
-    //region Commands
+        ArrayList<String> groupsArrayList = new ArrayList<>();
+
+        ArrayList<GroupedTasksCollection> сhildDataList = new ArrayList<>();
+
+        for (TaskComparable task: tasks) {
+
+            String dateFrom = task.GetDateFrom();
+
+            Calendar curTaskDateTimeFrom = task.GetDateTimeFrom();
+            int dayOfWeek = curTaskDateTimeFrom.get(Calendar.DAY_OF_WEEK);
+            String strDayOfWeek = GetStrWeekDay(dayOfWeek);
+            String fullDayView = strDayOfWeek + ", " + dateFrom;
+
+
+            if (!groupsArrayList.contains(fullDayView)) {
+                groupsArrayList.add(fullDayView);
+
+                ArrayList<TaskComparable> curDateTasks = GetCurDateTasks(tasks, dateFrom);
+                сhildDataList.add(new GroupedTasksCollection(fullDayView, curDateTasks));
+
+            }
+        }
+
+        ExpandableTaskListAdapter adapter = new ExpandableTaskListAdapter(context, groupsArrayList, сhildDataList, R.layout.singletaskgrouplayout, R.layout.singletasklayout, login);
+        expandableTaskList.setAdapter(adapter);
+        ExpandableTaskListAdapter.selectedTasks.clear();
+
+    }
+
+    public String GetStrWeekDay(int dayNumber) {
+
+        switch (dayNumber) {
+            case 1: return "WED";
+            case 2: return "THU";
+            case 3: return "FRI";
+            case 4: return "SAT";
+            case 5: return "SUN";
+            case 6: return "MON";
+            case 7: return "TUE";
+            default: return "";
+        }
+    }
+
+    private ArrayList<TaskComparable> GetCurDateTasks(List<TaskComparable> tasks, String dateFrom) {
+
+        ArrayList<TaskComparable> resultList = new ArrayList<>();
+        for(TaskComparable task: tasks) {
+            String curDate = task.GetDateFrom();
+            if (curDate.equals(dateFrom)) {
+                resultList.add(task);
+            }
+        }
+
+
+        return resultList;
+    }
+
 
     private void OpenTaskEditorCommand(){
         Bundle bundle = new Bundle();
@@ -365,16 +459,16 @@ public class TaskListFragment extends Fragment implements ITaskListFragment {
 
         TaskEditorFragment taskEditorFragment = new TaskEditorFragment();
         taskEditorFragment.setArguments(bundle);
-        loadFragment(taskEditorFragment);
+        fragmentOperations.LoadFragment(taskEditorFragment);
 
     }
 
-    private void OpenTaskEditorCommand(TaskDBWrapper task){
+    private void OpenTaskEditorCommand(TaskComparable task){
 
 
         Bundle bundle = new Bundle();
         bundle.putBoolean("isNewTask", false);
-        bundle.putLong("Id", task.GetId());
+       // bundle.putLong("Id", task.GetId());
         bundle.putString("Name", task.GetName());
         bundle.putString("Comment", task.GetComment());
         bundle.putString("DateFrom", task.GetDateFrom());
@@ -384,119 +478,13 @@ public class TaskListFragment extends Fragment implements ITaskListFragment {
         bundle.putBoolean("Visibility", task.GetVisibility());
         bundle.putBoolean("Editable", task.GetEditable());
         bundle.putBoolean("Completed", task.GetCompleted());
-        bundle.putString("serverTaskNumber", task.GetServerTaskNumber());
+        bundle.putInt("serverTaskNumber", task.GetTaskNumber());
 
         TaskEditorFragment taskEditorFragment = new TaskEditorFragment();
         taskEditorFragment.setArguments(bundle);
-        loadFragment(taskEditorFragment);
+        fragmentOperations.LoadFragment(taskEditorFragment);
 
 
-    }
-
-
-    public void CommitTaskListToServerCommand(ArrayList</*TaskDBWrapper*/ServerTask> tasksFromServer, ArrayList<TaskDBWrapper> clientTasks, String username, ICoPlanningAPI client)
-            throws JSONException {
-        for (TaskDBWrapper clientTask:
-                clientTasks) {
-            String clientTn = clientTask.GetServerTaskNumber();
-
-            boolean isClientTnExists = false;
-            for (/*TaskDBWrapper*/ServerTask serverTask:
-                    tasksFromServer) {
-                String serverTn = serverTask.GetServerTaskNumber();
-                if (serverTn.equals(clientTn)) {
-
-                    isClientTnExists = true;
-                    /*clientTask.SetServerTaskNumber(serverTask.GetServerTaskNumber());
-
-					clientTask.SetSubscriberList(serverTask.GetSubscriberList());*/
-                    ServerTask newTask = new ServerTask(clientTask);
-                    newTask.SetSubscriberList(serverTask.GetSubscriberList());
-                    newTask.SetServerTaskNumber(serverTask.GetServerTaskNumber());
-
-                    int index = tasksFromServer.indexOf(serverTask);
-                    tasksFromServer.set(index, newTask);
-                    break;
-                }
-            }
-            if (!isClientTnExists) {
-                String maxNumber = GetMaxServerTaskNumberCommand(tasksFromServer);
-                ServerTask newTask = new ServerTask(clientTask);
-                newTask.SetId(clientTask.GetId());
-                newTask.SetServerTaskNumber(maxNumber);
-                tasksFromServer.add(newTask);
-
-                TaskManager tm = new TaskManager(getContext());
-                tm.UpdateTask(newTask, newTask.GetId());
-
-            }
-
-        }
-
-        LoadTaskListOnServerCommand(tasksFromServer, username, client);
-    }
-
-
-    public void LoadTaskListOnServerCommand(ArrayList</*TaskDBWrapper*/ServerTask> taskList, String username, ICoPlanningAPI client) throws JSONException {
-
-        SetTaskListParams tlParams = new SetTaskListParams();
-        tlParams.username = username;
-        //tlParams.taskList = jsonTasks;
-        tlParams.taskList = taskList;
-
-        GsonBuilder builder = new GsonBuilder();
-        Gson gson = builder.create();
-        Log.d("GSON", gson.toJson(tlParams));
-
-        setTaskListCall = client.setUserTaskList(tlParams);
-
-        setTaskListCall.enqueue(new Callback<User>() {
-                                    @Override
-                                    public void onResponse(Call<User> call, Response<User> response) {
-                                    }
-
-                                    @Override
-                                    public void onFailure(Call<User> call, Throwable t) {
-
-                                    }
-
-                                }
-        );
-
-
-    }
-
-    private String GetMaxServerTaskNumberCommand(ArrayList</*TaskDBWrapper*/ServerTask> tasksFromServer) {
-        int maxNumber = 0;
-        for (/*TaskDBWrapper*/ServerTask task:tasksFromServer
-        ) {
-            int curNumber = Integer.parseInt(task.GetServerTaskNumber());
-            if (curNumber>=maxNumber)
-                maxNumber = curNumber;
-        }
-        return String.valueOf(maxNumber+1);
-    }
-
-
-    public void UpdateTaskListFromServerCommand(ArrayList</*TaskDBWrapper*/ServerTask> tasksFromServer, ArrayList<TaskDBWrapper> clientTasks, TaskManager taskManager) {
-        for (/*TaskDBWrapper*/ServerTask serverTask:
-                tasksFromServer) {
-            String serverTn = serverTask.GetServerTaskNumber();
-
-            boolean isServerTnExists = false;
-            for (TaskDBWrapper clientTask:
-                    clientTasks) {
-                String clientTn = clientTask.GetServerTaskNumber();
-                if (serverTn.equals(clientTn)) {
-                    serverTask.SetCompleted(clientTask.GetCompleted());
-                    taskManager.UpdateTask(serverTask, clientTask.GetId());
-                    isServerTnExists = true;
-                    break;
-                }
-            }
-            if (!isServerTnExists)
-                taskManager.AddTask(serverTask);
-        }
     }
 
 
@@ -529,6 +517,7 @@ public class TaskListFragment extends Fragment implements ITaskListFragment {
     }
 
     private void SetIntervalCommand(Calendar dateFrom, Calendar dateTo) {
+        UnlockDatesCommand();
         SetFromDateCommand(dateFrom);
         SetToDateCommand(dateTo);
 
@@ -546,14 +535,13 @@ public class TaskListFragment extends Fragment implements ITaskListFragment {
     }
 
     private void SetTodayCommand() {
+        LockDatesCommand();
+
         Calendar now = new GregorianCalendar();
-      /*  now.add(Calendar.DAY_OF_WEEK, 7 - now.get(Calendar.DAY_OF_WEEK) + 1);
-        now.add(Calendar.DAY_OF_WEEK, -6);*/
 
         now.set(Calendar.HOUR_OF_DAY, 0);
         now.set(Calendar.MINUTE, 0);
         now.set(Calendar.SECOND, 0);
-        //Calendar dateFrom = now;
         curDateAndTimeFrom = now;
 
         Calendar nowClone = (Calendar) now.clone();
@@ -561,34 +549,35 @@ public class TaskListFragment extends Fragment implements ITaskListFragment {
         nowClone.set(Calendar.HOUR_OF_DAY, 23);
         nowClone.set(Calendar.MINUTE, 59);
         nowClone.set(Calendar.SECOND, 59);
-       // Calendar dateTo = nowClone;
         curDateAndTimeTo = nowClone;
 
         taskListParamsBundle.clear();
         taskListParamsBundle.putString(TASK_LIST_OPTION, TASK_LIST_TODAY);
 
         today.setChecked(true);
-        //UpdateTaskList(dateFrom, dateTo);
         UpdateTaskList(curDateAndTimeFrom, curDateAndTimeTo);
+        HideParamsCommand();
+        HideCalendarCommand();
     }
 
     private void SetThisWeekCommand() {
+        LockDatesCommand();
+
         Calendar now = new GregorianCalendar();
         now.add(Calendar.DAY_OF_WEEK, -(now.get(Calendar.DAY_OF_WEEK))+1);
-        //Calendar dateFrom = now;
         curDateAndTimeFrom = now;
 
         now = new GregorianCalendar();
         now.add(Calendar.DAY_OF_WEEK, 7 - now.get(Calendar.DAY_OF_WEEK) + 1);
-        //Calendar dateTo = now;
         curDateAndTimeTo = now;
 
         taskListParamsBundle.clear();
         taskListParamsBundle.putString(TASK_LIST_OPTION, TASK_LIST_THIS_WEEK);
 
         thisWeek.setChecked(true);
-        //UpdateTaskList(dateFrom, dateTo);
         UpdateTaskList(curDateAndTimeFrom, curDateAndTimeTo);
+        HideParamsCommand();
+        HideCalendarCommand();
     }
 
 
@@ -606,28 +595,39 @@ public class TaskListFragment extends Fragment implements ITaskListFragment {
 
 
     public void ShowParamsCommand() {
-        taskListHeader.setVisibility(View.VISIBLE);
+        filterButton.setImageResource(R.drawable.filter_selected);
         readyPeriodsRadioGroup.setVisibility(View.VISIBLE);
         dateFromLinearLayout.setVisibility(View.VISIBLE);
         dateToLinearLayout.setVisibility(View.VISIBLE);
         isParamsVisible = true;
-        ViewGroup.LayoutParams params = paramsEnableButton.getLayoutParams();
-        params.width = ViewGroup.LayoutParams.WRAP_CONTENT;
-        paramsEnableButton.setLayoutParams(params);
-        paramsEnableButton.setText("Hide parameters");
+
+        filterStates = FiltersStates.Filter;
     }
 
     public void HideParamsCommand() {
-        taskListHeader.setVisibility(View.GONE);
+        filterButton.setImageResource(R.drawable.filter);
         readyPeriodsRadioGroup.setVisibility(View.GONE);
         dateFromLinearLayout.setVisibility(View.GONE);
         dateToLinearLayout.setVisibility(View.GONE);
         isParamsVisible = false;
-        ViewGroup.LayoutParams params = paramsEnableButton.getLayoutParams();
-        params.width = ViewGroup.LayoutParams.MATCH_PARENT;
-        paramsEnableButton.setLayoutParams(params);
-        paramsEnableButton.setText("Show parameters");
+
+        filterStates = FiltersStates.AllHidden;
     }
+
+    public void ShowCalendarCommand() {
+        calendarButton.setImageResource(R.drawable.calendar_selected);
+        calendarCustomView.setVisibility(View.VISIBLE);
+
+        filterStates = FiltersStates.Calendar;
+    }
+
+    public void HideCalendarCommand() {
+        calendarButton.setImageResource(R.drawable.calendar);
+        calendarCustomView.setVisibility(View.GONE);
+
+        filterStates = FiltersStates.AllHidden;
+    }
+
     //endregion
 
 
@@ -645,44 +645,20 @@ public class TaskListFragment extends Fragment implements ITaskListFragment {
         dateToClone.set(Calendar.MINUTE, 59);
         dateToClone.set(Calendar.SECOND, 59);
 
-        taskManager = new TaskManager(getContext());
-
-        ArrayList<TaskDBWrapper> tasks = taskManager.GetTasks(dateFromClone, dateToClone);
-
-        ArrayList<TaskComparable> taskComparables = new ArrayList<>();
-        for (TaskDBWrapper task:tasks
-        ) {
-            TaskComparable taskComparable = new TaskComparable(task);
-            taskComparables.add(taskComparable);
-        }
-        Collections.sort(taskComparables, TaskComparable.DateTimeFromComparator);
-
-        taskList = view.findViewById(R.id.taskList);
-        taskAdapter = new TaskAdapter(getContext(), R.layout.singletasklayout, taskComparables);
-        taskList.setAdapter(taskAdapter);
-
-        taskAdapter.selectedTasks.clear();
-
-
-        if (taskComparables.size()>2)
-            paramsEnableButton.setVisibility(View.VISIBLE);
-        else
-            paramsEnableButton.setVisibility(View.GONE);
-
-
+        serverTaskManager.GetTasksFromServer(login, dateFromClone, dateToClone);
 
     }
 
+
+
     public void InitButtons(){
-        int tasksCount = taskAdapter.selectedTasks.size();
+        int tasksCount = expandableTaskAdapter.selectedTasks.size();
 
         switch (tasksCount){
             case 0:
             {
                 addTaskButton.setEnabled(true);
                 editTaskButton.setEnabled(false);
-                copyTaskButton.setEnabled(false);
-                carryTaskButton.setEnabled(false);
                 deleteTaskButton.setEnabled(false);
                 break;
             }
@@ -690,8 +666,6 @@ public class TaskListFragment extends Fragment implements ITaskListFragment {
             {
                 addTaskButton.setEnabled(true);
                 editTaskButton.setEnabled(true);
-                copyTaskButton.setEnabled(true);
-                carryTaskButton.setEnabled(true);
                 deleteTaskButton.setEnabled(true);
                 break;
             }
@@ -699,17 +673,15 @@ public class TaskListFragment extends Fragment implements ITaskListFragment {
             {
                 addTaskButton.setEnabled(true);
                 editTaskButton.setEnabled(false);
-                copyTaskButton.setEnabled(true);
-                carryTaskButton.setEnabled(true);
                 deleteTaskButton.setEnabled(true);
                 break;
             }
         }
     }
 
+
+
     //endregion
-
-
 
 
     //region Event listeners
@@ -730,6 +702,8 @@ public class TaskListFragment extends Fragment implements ITaskListFragment {
             SetFromDateCommand(dateAndTimeFrom);
 
             UpdateTaskList(dateAndTimeFrom, dateAndTimeTo);
+            HideParamsCommand();
+            HideCalendarCommand();
 
             InitButtons();
 
@@ -755,6 +729,8 @@ public class TaskListFragment extends Fragment implements ITaskListFragment {
             SetToDateCommand(dateAndTimeTo);
 
             UpdateTaskList(dateAndTimeFrom, dateAndTimeTo);
+            HideParamsCommand();
+            HideCalendarCommand();
 
             InitButtons();
 
@@ -763,26 +739,15 @@ public class TaskListFragment extends Fragment implements ITaskListFragment {
 
     public void setInterval(View view) {
         SetIntervalCommand(dateAndTimeFrom, dateAndTimeTo);
-        UnlockDatesCommand();
+
     }
 
     public void setToday(View view) {
-        LockDatesCommand();
         SetTodayCommand();
     }
 
     public void setThisWeek(View view) {
-        LockDatesCommand();
         SetThisWeekCommand();
-    }
-
-
-    public void ParamsEnable(View view) {
-        if (isParamsVisible)
-            HideParamsCommand();
-        else
-            ShowParamsCommand();
-
     }
 
     public void AddTask(View view){
@@ -790,190 +755,70 @@ public class TaskListFragment extends Fragment implements ITaskListFragment {
     }
 
     public void EditTask(View view){
-        OpenTaskEditorCommand(taskAdapter.selectedTasks.get(0));
+        OpenTaskEditorCommand(expandableTaskAdapter.selectedTasks.get(0));
     }
 
 
-    public void CopyTask(View view){
-        //Toast.makeText(getApplicationContext(), "Copy" , Toast.LENGTH_LONG).show();
-        Calendar calendarCopy = new GregorianCalendar();
 
-        new DatePickerDialog(getContext(), dCopy,
-                calendarCopy.get(Calendar.YEAR),
-                calendarCopy.get(Calendar.MONTH),
-                calendarCopy.get(Calendar.DAY_OF_MONTH))
-                .show();
-
-    }
-
-    DatePickerDialog.OnDateSetListener dCopy=new DatePickerDialog.OnDateSetListener() {
-        public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
-
-            ArrayList<TaskComparable> selected = taskAdapter.selectedTasks;
-            for (TaskDBWrapper task:selected
-            ) {
-                task.SetDateFrom(year, monthOfYear+1, dayOfMonth);
-                task.SetDateTo(year, monthOfYear+1, dayOfMonth);
-                String timeTo = task.GetTimeFrom();
-                int timeToHours = ConvertDateAndTime.GetHourFromStringTime(timeTo);
-                int timeToMinutes = ConvertDateAndTime.GetMinutesFromStringTime(timeTo);
-                task.SetTimeTo(timeToHours, timeToMinutes);
-                TaskManager tm = new TaskManager(getContext());
-                tm.AddTask(task);
-            }
-            UpdateTaskList(curDateAndTimeFrom, curDateAndTimeTo);
-            Toast.makeText(getContext(), "Copied!" , Toast.LENGTH_LONG).show();
-        }
-    };
-
-    public void CarryTask(View view){
-        //Toast.makeText(getApplicationContext(), "Carry" , Toast.LENGTH_LONG).show();
-        Calendar calendarCarry = new GregorianCalendar();
-
-        new DatePickerDialog(getContext(), dCarry,
-                calendarCarry.get(Calendar.YEAR),
-                calendarCarry.get(Calendar.MONTH),
-                calendarCarry.get(Calendar.DAY_OF_MONTH))
-                .show();
-
-
-    }
-
-    DatePickerDialog.OnDateSetListener dCarry=new DatePickerDialog.OnDateSetListener() {
-        public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
-
-            ArrayList<TaskComparable> selected = taskAdapter.selectedTasks;
-            for (TaskDBWrapper task:selected
-            ) {
-                task.SetDateFrom(year, monthOfYear+1, dayOfMonth);
-                task.SetDateTo(year, monthOfYear+1, dayOfMonth);
-                String timeTo = task.GetTimeFrom();
-                int timeToHours = ConvertDateAndTime.GetHourFromStringTime(timeTo);
-                int timeToMinutes = ConvertDateAndTime.GetMinutesFromStringTime(timeTo);
-                task.SetTimeTo(timeToHours, timeToMinutes);
-                TaskManager tm = new TaskManager(getContext());
-                tm.UpdateTask(task, task.GetId());
-            }
-            UpdateTaskList(curDateAndTimeFrom, curDateAndTimeTo);
-            Toast.makeText(getContext(), "Carried!" , Toast.LENGTH_LONG).show();
-        }
-    };
 
     public void DeleteTask(View view){
 
-        TaskManager tm = new TaskManager(getContext());
-
-
-        ArrayList<TaskComparable> selected = taskAdapter.selectedTasks;
-        for (TaskDBWrapper taskForDelete:selected
+        ArrayList<TaskComparable> selected = expandableTaskAdapter.selectedTasks;
+        for (ServerTask taskForDelete:selected
         ) {
-            tm.DeleteTask(taskForDelete.GetId());
+            serverTaskManager.DeleteTask(login, taskForDelete.GetTaskNumber(), curDateAndTimeFrom, curDateAndTimeTo);
         }
 
-
         UpdateTaskList(curDateAndTimeFrom, curDateAndTimeTo);
-
-        Toast.makeText(getContext(), "Deleted!" , Toast.LENGTH_LONG).show();
-
-    }
-
-    public void UploadTaskList(View view) {
-
-        RetrofitClient rClient = new RetrofitClient();
-        Retrofit retrofit = rClient.GetRetrofitEntity();
-
-        client = retrofit.create(ICoPlanningAPI.class);
-
-        loginCall = client.login(login, password);
-
-
-        loginCall.enqueue(new Callback<User>() {
-            @Override
-            public void onResponse(Call<User> call, Response<User> response) {
-                User user = response.body();
-
-                tasksFromServer = user.taskList;
-                clientTasks = taskManager.GetTasks();
-
-                try {
-                    CommitTaskListToServerCommand(tasksFromServer, clientTasks, login, client);
-                    Toast.makeText(getContext(), "Uploaded!" , Toast.LENGTH_LONG).show();
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-
-            }
-
-            @Override
-            public void onFailure(Call<User> call, Throwable t) {
-
-            }
-        });
-    }
-
-    public void DownloadTaskList(View view) {
-        RetrofitClient rClient = new RetrofitClient();
-        Retrofit retrofit = rClient.GetRetrofitEntity();
-
-        client = retrofit.create(ICoPlanningAPI.class);
-
-        loginCall = client.login(login, password);
-
-
-        loginCall.enqueue(new Callback<User>() {
-            @Override
-            public void onResponse(Call<User> call, Response<User> response) {
-                User user = response.body();
-
-                tasksFromServer = user.taskList;
-                clientTasks = taskManager.GetTasks();
-
-                UpdateTaskListFromServerCommand(tasksFromServer, clientTasks, taskManager);
-
-
-                UpdateTaskList(dateAndTimeFrom, dateAndTimeTo);
-
-                Toast.makeText(getContext(), "Downloaded!" , Toast.LENGTH_LONG).show();
-
-            }
-
-            @Override
-            public void onFailure(Call<User> call, Throwable t) {
-
-            }
-        });
+        HideParamsCommand();
+        HideCalendarCommand();
 
     }
 
 
-    String login;
-    String password;
-    ICoPlanningAPI client;
-    ArrayList<ServerTask> tasksFromServer;
-    ArrayList<TaskDBWrapper> clientTasks;
+    private FiltersStates filterStates = FiltersStates.AllHidden;
 
-    //endregion
+    public void FilterSelect(View view) {
 
+       if ((filterStates==FiltersStates.AllHidden)||(filterStates== FiltersStates.Calendar)) {
+           ShowParamsCommand();
+           HideCalendarCommand();
 
-    //region loadFragment
+           filterStates = FiltersStates.Filter;
+       }
+       else {
+           HideParamsCommand();
 
-    private void loadFragment(Fragment fragment) {
+           filterStates = FiltersStates.AllHidden;
+       }
 
+    }
 
-        // load fragment
-        FragmentTransaction transaction = getFragmentManager().beginTransaction();
-        transaction.replace(R.id.frame_container, fragment);
-        transaction.addToBackStack(null);
-        transaction.commit();
+    public void CalendarSelect(View view) {
+
+       if ((filterStates==FiltersStates.AllHidden)||(filterStates== FiltersStates.Filter)) {
+
+           HideParamsCommand();
+           ShowCalendarCommand();
+
+           filterStates = FiltersStates.Calendar;
+       }
+
+       else {
+
+           HideCalendarCommand();
+
+           filterStates = FiltersStates.AllHidden;
+       }
+    }
+
+    private enum FiltersStates {
+        AllHidden, Filter, Calendar
     }
 
     //endregion
 
-   /* @Override
-    protected void onRestart() {
-        super.onRestart();
-        UpdateTaskList(dateAndTimeFrom, dateAndTimeTo);
-    }*/
+
 
     // TODO: Rename method, update argument and hook method into UI event
     public void onButtonPressed(Uri uri) {
@@ -985,8 +830,6 @@ public class TaskListFragment extends Fragment implements ITaskListFragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-
-//        UpdateTaskList(dateAndTimeFrom, dateAndTimeTo);
 
         if (context instanceof OnFragmentInteractionListener) {
             mListener = (OnFragmentInteractionListener) context;
@@ -1011,6 +854,8 @@ public class TaskListFragment extends Fragment implements ITaskListFragment {
             LockDatesCommand();
        // UpdateTaskList(dateAndTimeFrom, dateAndTimeTo);
         UpdateTaskList(curDateAndTimeFrom, curDateAndTimeTo);
+        HideParamsCommand();
+        HideCalendarCommand();
     }
 
     @Override
@@ -1018,9 +863,14 @@ public class TaskListFragment extends Fragment implements ITaskListFragment {
         super.onPause();
 
         this.setArguments(taskListParamsBundle);
-        Fragment fragment = this;
-        global.SetCurSchedFragment(fragment);
+
+        String simpleName = this.getClass().getSimpleName();
+
+        if (simpleName.equals("TaskListFragment"))
+            global.SetCurSchedFragment(this);
     }
+
+
 
     /**
      * This interface must be implemented by activities that contain this

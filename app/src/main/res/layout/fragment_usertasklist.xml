@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".fragments.TaskListFragment">
+
+    <android.support.constraint.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_gravity="right"
+                >
+                <ImageButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/filterButton"
+                    android:layout_gravity="right"
+                    android:background="@null"
+                    android:src="@drawable/filter"
+                    android:onClick="FilterSelect"
+                    android:paddingRight="8dp"
+                    />
+
+                <ImageButton
+                    android:id="@+id/calendarButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="right"
+                    android:background="@null"
+                    android:onClick="CalendarSelect"
+                    android:paddingRight="8dp"
+                    android:src="@drawable/calendar" />
+
+            </LinearLayout>>
+
+
+            <com.example.lighthead.androidcustomcalendar.calendar.CalendarCustomView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:id="@+id/calendarView"
+                android:paddingBottom="5dp"
+                android:paddingTop="5dp"
+                />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp">
+
+
+                <RadioGroup
+                    android:id="@+id/readyPeriodsRadioGroup"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <RadioButton
+                        android:id="@+id/today"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="24dp"
+                        android:layout_weight="1"
+                        android:text="Today"
+                        style="@style/TextViewParamValue"
+                        android:onClick="setToday"/>
+
+                    <RadioButton
+                        android:id="@+id/thisWeek"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="24dp"
+                        android:layout_weight="1"
+                        android:text="This week"
+                        style="@style/TextViewParamValue"
+                        android:onClick="setThisWeek"/>
+
+                    <RadioButton
+                        android:id="@+id/setInterval"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="24dp"
+                        android:layout_weight="1"
+                        android:text="Set interval"
+                        style="@style/TextViewParamValue"
+                        android:onClick="setInterval"/>
+                </RadioGroup>
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:paddingTop="8dp"
+                        android:paddingBottom="8dp"
+                        android:id="@+id/dateFromLinearLayout">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:paddingLeft="30dp"
+                            android:paddingRight="10dp"
+                            style="@style/TextViewParamName"
+                            android:text="From" />
+
+                        <TextView
+                            android:id="@+id/dateFrom"
+                            style="@style/TextViewParamValue"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignBottom="@+id/dateFromLinearLayout"
+                            android:background="@drawable/datetimeshape"
+                            android:onClick="setDateFrom" />
+
+
+                    </LinearLayout>
+
+                </RelativeLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="8dp"
+                    android:id="@+id/dateToLinearLayout">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:paddingLeft="30dp"
+                        android:paddingRight="32dp"
+                        style="@style/TextViewParamName"
+                        android:text="To" />
+
+                    <TextView
+                        android:id="@+id/dateTo"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        style="@style/TextViewParamValue"
+                        android:background="@drawable/datetimeshape"
+                        android:onClick="setDateTo" />
+
+                </LinearLayout>
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <ListView
+                        android:id="@+id/taskList"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:choiceMode="multipleChoice"/>
+
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_marginEnd="8dp"
+                        android:layout_marginRight="8dp"
+                        android:orientation="vertical"
+                        android:layout_alignRight="@+id/taskList"
+
+
+                        >
+                        <ImageButton
+                            android:id="@+id/addTask"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentBottom="false"
+                            android:layout_gravity="right"
+                            android:background="@null"
+                            android:src="@drawable/add"
+                            android:layout_marginTop="10dp"
+                            android:layout_marginBottom="11dp"
+                            android:layout_marginRight="5dp"
+                            android:onClick="AddTask"
+                            />
+                        <ImageButton
+                            android:id="@+id/editTask"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentBottom="false"
+                            android:layout_gravity="right"
+                            android:background="@null"
+                            android:src="@drawable/edit"
+                            android:layout_marginBottom="11dp"
+                            android:layout_marginRight="5dp"
+                            android:onClick="EditTask"
+                            />
+                        <!--   <ImageButton
+                               android:id="@+id/copyTask"
+                               android:layout_width="wrap_content"
+                               android:layout_height="wrap_content"
+                               android:layout_alignParentBottom="false"
+                               android:layout_gravity="right"
+                               android:background="@null"
+                               android:src="@drawable/copy"
+                               android:layout_marginBottom="11dp"
+                               android:layout_marginRight="5dp"
+                               android:onClick="CopyTask"
+                               />
+                           <ImageButton
+                               android:id="@+id/carryTask"
+                               android:layout_width="wrap_content"
+                               android:layout_height="wrap_content"
+                               android:layout_alignParentBottom="false"
+                               android:layout_gravity="right"
+                               android:background="@null"
+                               android:layout_marginBottom="11dp"
+                               android:layout_marginRight="5dp"
+                               android:src="@drawable/carry"
+                               android:onClick="CarryTask"
+                               />-->
+                        <ImageButton
+                            android:id="@+id/deleteTask"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentBottom="false"
+                            android:layout_gravity="right"
+                            android:background="@null"
+                            android:src="@drawable/delete"
+                            android:layout_marginBottom="11dp"
+                            android:layout_marginRight="5dp"
+                            android:onClick="DeleteTask"
+                            />
+                        <!-- <ImageButton
+                             android:id="@+id/uploadTaskList"
+                             android:layout_width="wrap_content"
+                             android:layout_height="wrap_content"
+                             android:layout_alignParentBottom="false"
+                             android:layout_gravity="right"
+                             android:background="@null"
+                             android:src="@drawable/upload"
+                             android:layout_marginBottom="11dp"
+                             android:layout_marginRight="5dp"
+                             android:visibility="invisible"
+                             />
+                         <ImageButton
+                             android:id="@+id/downloadTaskList"
+                             android:layout_width="wrap_content"
+                             android:layout_height="wrap_content"
+                             android:layout_alignParentBottom="false"
+                             android:layout_gravity="right"
+                             android:background="@null"
+                             android:src="@drawable/download"
+                             android:layout_marginBottom="11dp"
+                             android:layout_marginRight="5dp"
+                             android:visibility="invisible"/>-->
+
+                    </LinearLayout>
+
+
+
+
+                </RelativeLayout>
+
+            </LinearLayout>
+
+
+        </LinearLayout>
+
+
+    </android.support.constraint.ConstraintLayout>
+
+</FrameLayout>

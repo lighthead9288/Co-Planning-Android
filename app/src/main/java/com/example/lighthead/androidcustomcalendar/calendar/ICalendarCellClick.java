@@ -1,7 +1,7 @@
 package com.example.lighthead.androidcustomcalendar.calendar;
 
-import android.os.Bundle;
+import java.util.Calendar;
 
 public interface ICalendarCellClick {
-    void OnClick(Bundle bundle);
+    void OnClick(Calendar calendar);
 }

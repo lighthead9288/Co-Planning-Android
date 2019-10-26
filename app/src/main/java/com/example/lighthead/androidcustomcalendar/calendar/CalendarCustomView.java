@@ -2,14 +2,12 @@ package com.example.lighthead.androidcustomcalendar.calendar;
 
 import android.content.Context;
 import android.graphics.Color;
-import android.os.Bundle;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.GridView;
 import android.widget.ImageView;
@@ -44,6 +42,13 @@ public class CalendarCustomView extends LinearLayout{
     private int firstWeekDayNumber = 1;
     private final String[] weekDaysList={"MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"};
 
+    private ICalendarCellClick iCalendarCellClick;
+
+    public void SetICalendarCellClick(ICalendarCellClick iCalendarClick) {
+        iCalendarCellClick = iCalendarClick;
+        setUpCalendarAdapter();
+    }
+
     public CalendarCustomView(Context context) {
         super(context);
     }
@@ -55,9 +60,7 @@ public class CalendarCustomView extends LinearLayout{
         setPreviousButtonClickEvent();
         setNextButtonClickEvent();
        // setGridCellClickEvents();
-
-
-        setDaysInWeekItemSelectEvent();
+       // setDaysInWeekItemSelectEvent();
 
         
 
@@ -74,13 +77,12 @@ public class CalendarCustomView extends LinearLayout{
         previousButton = (ImageView)view.findViewById(R.id.previous_month);
         nextButton = (ImageView)view.findViewById(R.id.next_month);
         currentDate = (TextView)view.findViewById(R.id.display_current_date);
-        addEventButton = (Button)view.findViewById(R.id.add_calendar_event);
         calendarGridView = (GridView)view.findViewById(R.id.calendar_grid);
-        firstWeekDaySelect = (Spinner)view.findViewById(R.id.firstWeekDaySelect);
+      //  firstWeekDaySelect = (Spinner)view.findViewById(R.id.firstWeekDaySelect);
 
-        ArrayAdapter<String> weekDaysAdapter = new ArrayAdapter<String>(context, R.layout.support_simple_spinner_dropdown_item, weekDaysList);
+     /*   ArrayAdapter<String> weekDaysAdapter = new ArrayAdapter<String>(context, R.layout.support_simple_spinner_dropdown_item, weekDaysList);
         weekDaysAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        firstWeekDaySelect.setAdapter(weekDaysAdapter);
+        firstWeekDaySelect.setAdapter(weekDaysAdapter);*/
 
     }
 
@@ -88,10 +90,7 @@ public class CalendarCustomView extends LinearLayout{
         firstWeekDaySelect.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-
-              //  String item = firstWeekDaySelect.getSelectedItem().toString();
                 int pos = (position<6)?position+1:0;
-                //Toast.makeText(context, String.valueOf(pos), Toast.LENGTH_LONG).show();
                 firstWeekDayNumber = pos;
                 createWeekDaysTextViews();
                 setUpCalendarAdapter();
@@ -191,8 +190,6 @@ public class CalendarCustomView extends LinearLayout{
         while(dayValueInCells.size() < MAX_CALENDAR_COLUMN){
             dayValueInCells.add(mCal.getTime());
 
-           // Log.d("MyLog", mCal.getTime().toString());
-
             mCal.add(Calendar.DAY_OF_MONTH, 1);
         }
 
@@ -204,22 +201,7 @@ public class CalendarCustomView extends LinearLayout{
         String sDate = formatter.format(cal.getTime());
         currentDate.setText(sDate);
 
-
-
-        ICalendarCellClick iCalendarCellClick = new ICalendarCellClick() {
-            @Override
-            public void OnClick(Bundle bundle) {
-
-
-
-
-            }
-        };
-
-
-        mAdapter = new GridAdapter(context, dayValueInCells, cal, iCalendarCellClick
-             //   , mEvents
-        );
+        mAdapter = new GridAdapter(context, dayValueInCells, cal, iCalendarCellClick);
         calendarGridView.setAdapter(mAdapter);
     }
 }

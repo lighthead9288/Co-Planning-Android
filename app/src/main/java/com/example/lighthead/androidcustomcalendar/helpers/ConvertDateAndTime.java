@@ -168,6 +168,29 @@ public class ConvertDateAndTime {
         return intMinutes;
     }
 
+    public static String GetISOStringDateFromISOString(String isoDateTime) {
+        Calendar calendar = GetCalendarDateTimeFromISOString(isoDateTime);
+
+        int year = calendar.get(Calendar.YEAR);
+        int month = calendar.get(Calendar.MONTH);
+        int day = calendar.get(Calendar.DAY_OF_MONTH);
+
+        String result = ConvertToISOStringDate(year, month, day);
+
+        return result;
+    }
+
+    public static String GetISOStringTimeFromISOString(String isoDateTime) {
+        Calendar calendar = GetCalendarDateTimeFromISOString(isoDateTime);
+
+        int hours = calendar.get(Calendar.HOUR_OF_DAY);
+        int minutes = calendar.get(Calendar.MINUTE);
+
+        String result = ConvertToISOStringTime(hours, minutes);
+
+        return result;
+    }
+
 
     public static Calendar GetCalendarDateTimeFromISOString(String isoDateTime) {
         Calendar cal = Calendar.getInstance();
@@ -200,6 +223,27 @@ public class ConvertDateAndTime {
         int minutes = calendar.get(Calendar.MINUTE);
 
         String result = ConvertDateAndTime.ConvertToStringTime(hours, minutes);
+
+        return result;
+    }
+
+
+    public static String GetISOStringDateFromCalendar(Calendar calendar) {
+        int date = calendar.get(Calendar.DAY_OF_MONTH);
+        int month = calendar.get(Calendar.MONTH);
+        int year = calendar.get(Calendar.YEAR);
+        int dispMonth = month+1;
+
+        String result = ConvertDateAndTime.ConvertToISOStringDate(year, dispMonth, date);
+
+        return result;
+    }
+
+    public static String GetISOStringTimeFromCalendar(Calendar calendar) {
+        int hours = calendar.get(Calendar.HOUR_OF_DAY);
+        int minutes = calendar.get(Calendar.MINUTE);
+
+        String result = ConvertDateAndTime.ConvertToISOStringTime(hours, minutes);
 
         return result;
     }
