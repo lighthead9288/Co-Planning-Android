@@ -237,8 +237,7 @@ public class MappingResultsFragment extends Fragment {
         boolean isAllWithoutOne = allParticipantsWithoutOneCb.isChecked();
         boolean isOther = otherResultsCb.isChecked();
 
-        int maxParticipants = allMappingResultElements.get(0).GetAmount();
-
+        int maxParticipants = GetMaxAmount(allMappingResultElements);
 
         for (MappingResultElement element: allMappingResultElements) {
                 if ((element.GetAmount()==maxParticipants)&&(isAll))
@@ -252,6 +251,19 @@ public class MappingResultsFragment extends Fragment {
         ShowMappingVisibleResultsElements(filteredResults);
 
 
+    }
+
+    private int GetMaxAmount(ArrayList<MappingResultElement> mappingsResults) {
+        int maxResult = 0;
+
+        for (MappingResultElement element: mappingsResults) {
+
+            int curMax = element.GetAmount();
+            if (curMax>maxResult)
+                maxResult = curMax;
+        }
+
+        return maxResult;
     }
 
     private void ShowMappingVisibleResultsElements(ArrayList<MappingResultElement> mappingResultElements) {

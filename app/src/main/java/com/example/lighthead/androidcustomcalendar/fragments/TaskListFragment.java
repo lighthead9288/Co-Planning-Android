@@ -427,13 +427,13 @@ public class TaskListFragment extends Fragment implements ITaskListFragment {
     public String GetStrWeekDay(int dayNumber) {
 
         switch (dayNumber) {
-            case 1: return "WED";
-            case 2: return "THU";
-            case 3: return "FRI";
-            case 4: return "SAT";
-            case 5: return "SUN";
-            case 6: return "MON";
-            case 7: return "TUE";
+            case 6: return "SUN";
+            case 7: return "MON";
+            case 1: return "TUE";
+            case 2: return "WED";
+            case 3: return "THU";
+            case 4: return "FRI";
+            case 5: return "SAT";
             default: return "";
         }
     }
