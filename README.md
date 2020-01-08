@@ -29,5 +29,5 @@ In developing:
 1. Push notifications;
 2. Editing another user's tasks;
 3. Pass your tasks to another user;
-4. Tasks search;
+4. Show user's tasks free intervals;
 
