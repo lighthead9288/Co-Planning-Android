@@ -34,7 +34,7 @@ public interface ICoPlanningAPI {
     @GET("/api/extGetUserTaskList")
     Call<User> getUserTaskList(@Query("username") String username, @Query("dateFrom") String dateFrom,
                                @Query("timeFrom") String timeFrom, @Query("dateTo") String dateTo,
-                               @Query("timeTo") String timeTo);
+                               @Query("timeTo") String timeTo, @Query("taskFilter") String taskFilter);
 
     //@GET("/api/extGetUserUnavailableTime")
 

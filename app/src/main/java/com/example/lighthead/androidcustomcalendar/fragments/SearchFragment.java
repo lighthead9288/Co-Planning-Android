@@ -134,7 +134,6 @@ public class SearchFragment extends Fragment {
 
                 UserTaskListFragment userTaskListFragment = new UserTaskListFragment();
                 userTaskListFragment.setArguments(bundle);
-                userTaskListFragment.SetTasks(selectedUser.GetTaskList());
                 userTaskListFragment.SetUsername(selectedUser.GetUsername());
                 global.SetCurSearchFragment(userTaskListFragment);
                 fragmentOperations.LoadFragment(userTaskListFragment);

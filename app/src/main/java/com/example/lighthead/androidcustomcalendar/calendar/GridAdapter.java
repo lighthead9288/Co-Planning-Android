@@ -62,19 +62,29 @@ public class GridAdapter extends ArrayAdapter implements TaskListFragment.OnFrag
 
         View view = convertView;
 
+
         if (view == null) {
             view = mInflater.inflate(R.layout.single_cell_layout, parent, false);
         }
 
+        //Add day to calendar
+        TextView cellNumber = (TextView) view.findViewById(R.id.calendar_date_id);
+        cellNumber.setText(String.valueOf(dayValue));
+
+
         if (displayMonth == todayMonth && displayYear == todayYear && dayValue == todayDate) {
-            view.setBackgroundColor(Color.parseColor("#a61b03"));
+           // view.setBackgroundColor(Color.parseColor("#a61b03"));
+            cellNumber.setTextColor(Color.parseColor("#a61b03"));
         }
 
         else if (displayMonth == currentMonth && displayYear == currentYear) {
-            view.setBackgroundColor(Color.parseColor("#FF5733"));
+           // view.setBackgroundColor(Color.parseColor("#FF5733"));
+            cellNumber.setTextColor(Color.parseColor("#FF5733"));
+
 
         } else {
-            view.setBackgroundColor(Color.parseColor("#cccccc"));
+           // view.setBackgroundColor(Color.parseColor("#cccccc"));
+            cellNumber.setTextColor(Color.parseColor("#cccccc"));
 
         }
 
@@ -90,13 +100,19 @@ public class GridAdapter extends ArrayAdapter implements TaskListFragment.OnFrag
                     View curView = (View) pair.getKey();
                     int curColor = (int) pair.getValue();
 
-                    curView.setBackgroundColor(curColor);
+                    //curView.setBackgroundColor(curColor);
+                    TextView cellNumber = (TextView) curView.findViewById(R.id.calendar_date_id);
+                    cellNumber.setTextColor(curColor);
                 }
 
-                ColorDrawable viewColor = (ColorDrawable) v.getBackground();
-                int prevBackgroundColor = viewColor.getColor();
+             //   ColorDrawable viewColor = (ColorDrawable) v.getBackground();
+             //   int prevBackgroundColor = viewColor.getColor();
 
-                v.setBackgroundColor(Color.parseColor("#8c4c22"));
+                //v.setBackgroundColor(Color.parseColor("#8c4c22"));
+
+                TextView cellNumber = (TextView) v.findViewById(R.id.calendar_date_id);
+                int prevBackgroundColor = cellNumber.getCurrentTextColor();
+                cellNumber.setTextColor(Color.parseColor("#8c4c22"));
 
 
                 Calendar calendar = new GregorianCalendar();
@@ -110,9 +126,7 @@ public class GridAdapter extends ArrayAdapter implements TaskListFragment.OnFrag
             }
         });
 
-        //Add day to calendar
-        TextView cellNumber = (TextView) view.findViewById(R.id.calendar_date_id);
-        cellNumber.setText(String.valueOf(dayValue));
+
 
         return view;
     }
@@ -142,3 +156,4 @@ public class GridAdapter extends ArrayAdapter implements TaskListFragment.OnFrag
         return monthlyDates.indexOf(item);
     }
 }
+

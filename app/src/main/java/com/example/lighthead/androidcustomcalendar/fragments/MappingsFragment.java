@@ -250,6 +250,8 @@ public class MappingsFragment extends Fragment {
                 public void run() {
                     JSONArray data = (JSONArray) args[0];
 
+                    if (data==null) return;
+
                     ArrayList<SavedMapping> savedMappingsResults = new ArrayList<>();
 
                     for (int i = 0; i < data.length(); i++) {

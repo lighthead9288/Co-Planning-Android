@@ -78,6 +78,7 @@ public class CalendarCustomView extends LinearLayout{
         nextButton = (ImageView)view.findViewById(R.id.next_month);
         currentDate = (TextView)view.findViewById(R.id.display_current_date);
         calendarGridView = (GridView)view.findViewById(R.id.calendar_grid);
+
       //  firstWeekDaySelect = (Spinner)view.findViewById(R.id.firstWeekDaySelect);
 
      /*   ArrayAdapter<String> weekDaysAdapter = new ArrayAdapter<String>(context, R.layout.support_simple_spinner_dropdown_item, weekDaysList);

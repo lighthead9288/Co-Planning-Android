@@ -17,6 +17,7 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.SearchView;
 import android.widget.TextView;
 
 import com.example.lighthead.androidcustomcalendar.SharedPreferencesOperations;
@@ -33,6 +34,7 @@ import com.example.lighthead.androidcustomcalendar.R;
 import com.example.lighthead.androidcustomcalendar.helpers.taskWrappers.ServerTask;
 import com.example.lighthead.androidcustomcalendar.helpers.taskWrappers.TaskComparable;
 import com.example.lighthead.androidcustomcalendar.interfaces.ITaskListOperations;
+import com.example.lighthead.androidcustomcalendar.models.Task;
 
 
 import java.util.ArrayList;
@@ -108,6 +110,8 @@ public class TaskListFragment extends Fragment implements ITaskListFragment {
     protected ImageButton calendarButton;
 
     private CalendarCustomView calendarCustomView;
+
+    private SearchView taskFilterSv;
     //endregion
 
     //region Dates in textboxes
@@ -120,12 +124,14 @@ public class TaskListFragment extends Fragment implements ITaskListFragment {
     Calendar curDateAndTimeTo = Calendar.getInstance();
     //endregion
 
-    private ServerTaskManager serverTaskManager;
+    //region Current task filter
+    private String taskFilter;
+    //endregion
+
+    protected ServerTaskManager serverTaskManager;
     protected ExpandableTaskListAdapter expandableTaskAdapter;
 
-
-    private String login;
-    private String password;
+    protected String username;
 
     private SharedPreferencesOperations spa = new SharedPreferencesOperations();
     public Global global = new Global();
@@ -275,6 +281,23 @@ public class TaskListFragment extends Fragment implements ITaskListFragment {
 
         calendarCustomView.SetICalendarCellClick(iCalendarCellClick);
 
+        taskFilterSv = view.findViewById(R.id.taskFilter);
+        taskFilterSv.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                taskFilter = query;
+                UpdateTaskList(curDateAndTimeFrom, curDateAndTimeTo, taskFilter);
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                taskFilter = newText;
+                UpdateTaskList(curDateAndTimeFrom, curDateAndTimeTo, taskFilter);
+                return false;
+            }
+        });
+
         //endregion
 
         //'This week' option by default...
@@ -286,27 +309,18 @@ public class TaskListFragment extends Fragment implements ITaskListFragment {
             option = taskListParamsBundle.getString(TASK_LIST_OPTION);
         }
 
-        login = spa.GetLogin();
-        password = spa.GetPassword();
+        username = GetUsername();
 
         ITaskListOperations iTaskListOperations = new ITaskListOperations() {
             @Override
             public void OnGetTasks(ArrayList<ServerTask> tasksFromServer) {
-                ArrayList<TaskComparable> taskComparables = new ArrayList<>();
-                for (ServerTask task:tasksFromServer
-                ) {
-                    TaskComparable taskComparable = new TaskComparable(task);
-                    taskComparables.add(taskComparable);
-                }
-                Collections.sort(taskComparables, TaskComparable.DateTimeFromComparator);
-
-               SetExpandableListAdapter(getContext(), R.layout.singletasklayout, taskComparables, login);
+                ShowTasks(tasksFromServer);
 
             }
 
             @Override
             public void OnDeleteTasks() {
-                UpdateTaskList(curDateAndTimeFrom, curDateAndTimeTo);
+                UpdateTaskList(curDateAndTimeFrom, curDateAndTimeTo, taskFilter);
                 HideParamsCommand();
                 HideCalendarCommand();
             }
@@ -348,48 +362,21 @@ public class TaskListFragment extends Fragment implements ITaskListFragment {
     }
 
     //region Commands
-    @Override
-    public void SetTaskListView() {
-        expandableTaskList = view.findViewById(R.id.expandableTaskList);
-        expandableTaskList.setOnGroupClickListener(new ExpandableListView.OnGroupClickListener() {
-            @Override
-            public boolean onGroupClick(ExpandableListView parent, View v, int groupPosition, long id) {
-                return false;
-            }
-        });
 
-        expandableTaskList.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
-            @Override
-            public boolean onChildClick(ExpandableListView expandableListView, View view,
-                                        int groupPosition, int childPosition, long l) {
-                try {
-                    ExpandableListAdapter adapter = expandableListView.getExpandableListAdapter();
+    public void UpdateTaskList(Calendar dateFrom, Calendar dateTo, String taskFilter) {
 
-                    TaskComparable selectedTask = (TaskComparable)adapter.getChild(groupPosition,childPosition);
+        Calendar dateFromClone = (Calendar) dateFrom.clone();
+        dateFromClone.set(Calendar.HOUR_OF_DAY, 0);
+        dateFromClone.set(Calendar.MINUTE, 0);
+        dateFromClone.set(Calendar.SECOND, 0);
 
-                    if (!expandableTaskAdapter.selectedTasks.contains(selectedTask))
-                    {
-                        expandableTaskAdapter.selectedTasks.add(selectedTask);
-                        view.setBackgroundColor(Color.GRAY);
+        Calendar dateToClone = (Calendar) dateTo.clone();
+        dateToClone.set(Calendar.HOUR_OF_DAY, 23);
+        dateToClone.set(Calendar.MINUTE, 59);
+        dateToClone.set(Calendar.SECOND, 59);
 
-                    }
-                    else
-                    {
-                        expandableTaskAdapter.selectedTasks.remove(selectedTask);
-                        view.setBackgroundColor(Color.WHITE);
+        serverTaskManager.GetTasksFromServer(username, dateFromClone, dateToClone, taskFilter);
 
-                    }
-
-                    InitButtons();
-                }
-                catch(Exception e) {
-                    return false;
-                }
-
-
-                return false;
-            }
-        });
     }
 
 
@@ -418,7 +405,7 @@ public class TaskListFragment extends Fragment implements ITaskListFragment {
             }
         }
 
-        ExpandableTaskListAdapter adapter = new ExpandableTaskListAdapter(context, groupsArrayList, сhildDataList, R.layout.singletaskgrouplayout, R.layout.singletasklayout, login);
+        ExpandableTaskListAdapter adapter = new ExpandableTaskListAdapter(context, groupsArrayList, сhildDataList, R.layout.singletaskgrouplayout, R.layout.singletasklayout, username);
         expandableTaskList.setAdapter(adapter);
         ExpandableTaskListAdapter.selectedTasks.clear();
 
@@ -531,7 +518,7 @@ public class TaskListFragment extends Fragment implements ITaskListFragment {
 
 
         setInterval.setChecked(true);
-        UpdateTaskList(dateFrom, dateTo);
+        UpdateTaskList(dateFrom, dateTo, taskFilter);
     }
 
     private void SetTodayCommand() {
@@ -555,7 +542,7 @@ public class TaskListFragment extends Fragment implements ITaskListFragment {
         taskListParamsBundle.putString(TASK_LIST_OPTION, TASK_LIST_TODAY);
 
         today.setChecked(true);
-        UpdateTaskList(curDateAndTimeFrom, curDateAndTimeTo);
+        UpdateTaskList(curDateAndTimeFrom, curDateAndTimeTo, taskFilter);
         HideParamsCommand();
         HideCalendarCommand();
     }
@@ -575,7 +562,7 @@ public class TaskListFragment extends Fragment implements ITaskListFragment {
         taskListParamsBundle.putString(TASK_LIST_OPTION, TASK_LIST_THIS_WEEK);
 
         thisWeek.setChecked(true);
-        UpdateTaskList(curDateAndTimeFrom, curDateAndTimeTo);
+        UpdateTaskList(curDateAndTimeFrom, curDateAndTimeTo, taskFilter);
         HideParamsCommand();
         HideCalendarCommand();
     }
@@ -631,22 +618,68 @@ public class TaskListFragment extends Fragment implements ITaskListFragment {
     //endregion
 
 
-    //region ITaskLIstFragment implementation
+    //region ITaskListFragment implementation
 
-    public void UpdateTaskList(Calendar dateFrom, Calendar dateTo) {
+    @Override
+    public void SetTaskListView() {
+        expandableTaskList = view.findViewById(R.id.expandableTaskList);
+        expandableTaskList.setOnGroupClickListener(new ExpandableListView.OnGroupClickListener() {
+            @Override
+            public boolean onGroupClick(ExpandableListView parent, View v, int groupPosition, long id) {
+                return false;
+            }
+        });
 
-        Calendar dateFromClone = (Calendar) dateFrom.clone();
-        dateFromClone.set(Calendar.HOUR_OF_DAY, 0);
-        dateFromClone.set(Calendar.MINUTE, 0);
-        dateFromClone.set(Calendar.SECOND, 0);
+        expandableTaskList.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
+            @Override
+            public boolean onChildClick(ExpandableListView expandableListView, View view,
+                                        int groupPosition, int childPosition, long l) {
+                try {
+                    ExpandableListAdapter adapter = expandableListView.getExpandableListAdapter();
 
-        Calendar dateToClone = (Calendar) dateTo.clone();
-        dateToClone.set(Calendar.HOUR_OF_DAY, 23);
-        dateToClone.set(Calendar.MINUTE, 59);
-        dateToClone.set(Calendar.SECOND, 59);
+                    TaskComparable selectedTask = (TaskComparable)adapter.getChild(groupPosition,childPosition);
 
-        serverTaskManager.GetTasksFromServer(login, dateFromClone, dateToClone);
+                    if (!expandableTaskAdapter.selectedTasks.contains(selectedTask))
+                    {
+                        expandableTaskAdapter.selectedTasks.add(selectedTask);
+                        view.setBackgroundColor(Color.GRAY);
 
+                    }
+                    else
+                    {
+                        expandableTaskAdapter.selectedTasks.remove(selectedTask);
+                        view.setBackgroundColor(Color.WHITE);
+
+                    }
+
+                    InitButtons();
+                }
+                catch(Exception e) {
+                    return false;
+                }
+
+
+                return false;
+            }
+        });
+    }
+
+    @Override
+    public void ShowTasks(List<ServerTask> tasksFromServer) {
+        ArrayList<TaskComparable> taskComparables = new ArrayList<>();
+        for (ServerTask task:tasksFromServer
+        ) {
+            TaskComparable taskComparable = new TaskComparable(task);
+            taskComparables.add(taskComparable);
+        }
+        Collections.sort(taskComparables, TaskComparable.DateTimeFromComparator);
+
+        SetExpandableListAdapter(getContext(), R.layout.singletasklayout, taskComparables, username);
+    }
+
+    @Override
+    public String GetUsername() {
+        return spa.GetLogin();
     }
 
 
@@ -701,7 +734,7 @@ public class TaskListFragment extends Fragment implements ITaskListFragment {
 
             SetFromDateCommand(dateAndTimeFrom);
 
-            UpdateTaskList(dateAndTimeFrom, dateAndTimeTo);
+            UpdateTaskList(dateAndTimeFrom, dateAndTimeTo, taskFilter);
             HideParamsCommand();
             HideCalendarCommand();
 
@@ -728,7 +761,7 @@ public class TaskListFragment extends Fragment implements ITaskListFragment {
 
             SetToDateCommand(dateAndTimeTo);
 
-            UpdateTaskList(dateAndTimeFrom, dateAndTimeTo);
+            UpdateTaskList(dateAndTimeFrom, dateAndTimeTo, taskFilter);
             HideParamsCommand();
             HideCalendarCommand();
 
@@ -766,10 +799,10 @@ public class TaskListFragment extends Fragment implements ITaskListFragment {
         ArrayList<TaskComparable> selected = expandableTaskAdapter.selectedTasks;
         for (ServerTask taskForDelete:selected
         ) {
-            serverTaskManager.DeleteTask(login, taskForDelete.GetTaskNumber(), curDateAndTimeFrom, curDateAndTimeTo);
+            serverTaskManager.DeleteTask(username, taskForDelete.GetTaskNumber(), curDateAndTimeFrom, curDateAndTimeTo);
         }
 
-        UpdateTaskList(curDateAndTimeFrom, curDateAndTimeTo);
+        UpdateTaskList(curDateAndTimeFrom, curDateAndTimeTo, taskFilter);
         HideParamsCommand();
         HideCalendarCommand();
 
@@ -853,7 +886,7 @@ public class TaskListFragment extends Fragment implements ITaskListFragment {
         if (!option.equals(TASK_LIST_INTERVAL))
             LockDatesCommand();
        // UpdateTaskList(dateAndTimeFrom, dateAndTimeTo);
-        UpdateTaskList(curDateAndTimeFrom, curDateAndTimeTo);
+        UpdateTaskList(curDateAndTimeFrom, curDateAndTimeTo, taskFilter);
         HideParamsCommand();
         HideCalendarCommand();
     }

@@ -40,14 +40,14 @@ public class ServerTaskManager {
 
     }
 
-    public void GetTasksFromServer(String user, Calendar dateTimeFrom, Calendar dateTimeTo) {
+    public void GetTasksFromServer(String user, Calendar dateTimeFrom, Calendar dateTimeTo, String taskFilter) {
 
         String dateFrom = ConvertDateAndTime.GetISOStringDateFromCalendar(dateTimeFrom);
         String timeFrom = ConvertDateAndTime.GetISOStringTimeFromCalendar(dateTimeFrom);
         String dateTo = ConvertDateAndTime.GetISOStringDateFromCalendar(dateTimeTo);
         String timeTo = ConvertDateAndTime.GetISOStringTimeFromCalendar(dateTimeTo);
 
-        getUserTaskListCall = client.getUserTaskList(user, dateFrom, timeFrom, dateTo, timeTo);
+        getUserTaskListCall = client.getUserTaskList(user, dateFrom, timeFrom, dateTo, timeTo, taskFilter);
 
         getUserTaskListCall.enqueue(new Callback<User>() {
             @Override
